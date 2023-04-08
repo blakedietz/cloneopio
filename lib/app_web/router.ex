@@ -68,6 +68,12 @@ defmodule AppWeb.Router do
       on_mount: [{AppWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+      live "/boards", BoardLive.Index, :index
+      live "/boards/new", BoardLive.Index, :new
+      live "/boards/:id/edit", BoardLive.Index, :edit
+
+      live "/boards/:id", BoardLive.Show, :show
+      live "/boards/:id/show/edit", BoardLive.Show, :edit
     end
   end
 
