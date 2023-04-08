@@ -5,7 +5,17 @@ defmodule AppWeb.BoardLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, socket |> assign(width: 2000, height: 2000)}
+  end
+
+  @impl Phoenix.LiveView
+  def render(assigns) do
+    ~H"""
+    <main class="relative">
+      <div style={"width: #{@width}px; height: #{@height}px;"} />
+      <svg class="absolute top-0 left-0" style={"width: #{@width}px; height: #{@height}px;"}></svg>
+    </main>
+    """
   end
 
   @impl true
