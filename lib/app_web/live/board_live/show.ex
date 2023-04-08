@@ -11,7 +11,7 @@ defmodule AppWeb.BoardLive.Show do
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
-    <main class="relative">
+    <main class="relative" phx-hook="Board" id="board">
       <div style={"width: #{@width}px; height: #{@height}px;"} />
       <svg class="absolute top-0 left-0" style={"width: #{@width}px; height: #{@height}px;"}></svg>
     </main>
