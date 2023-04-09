@@ -9,3 +9,7 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+#
+
+{:ok, _} =
+  App.Accounts.register_user(%{email: "test@example.com", password: "no feeling is final"})
