@@ -5,11 +5,11 @@ defmodule App.Repo.Migrations.CreateBoards do
     create table(:boards, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :name, :string
-      add :user, references(:users, on_delete: :nothing, type: :binary_id)
+      add :user_id, references(:users, on_delete: :delete_all, type: :binary_id)
 
       timestamps()
     end
 
-    create index(:boards, [:user])
+    create index(:boards, [:user_id])
   end
 end

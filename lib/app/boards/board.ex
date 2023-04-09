@@ -2,11 +2,13 @@ defmodule App.Boards.Board do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias App.Accounts.User
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "boards" do
     field :name, :string
-    field :user, :binary_id
+    belongs_to :user, User
 
     timestamps()
   end
