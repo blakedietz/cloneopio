@@ -6,8 +6,8 @@ defmodule AppWeb.BoardLive.Components.CardEdit do
   @offset_px 10
 
   @impl Phoenix.LiveComponent
-  def update(%{card: nil}, socket) do
-    {:ok, socket |> assign(is_visible: false)}
+  def update(%{card: nil} = assigns, socket) do
+    {:ok, socket |> assign(assigns) |> assign(is_visible: false)}
   end
 
   def update(assigns, socket) do
@@ -24,7 +24,7 @@ defmodule AppWeb.BoardLive.Components.CardEdit do
   @impl Phoenix.LiveComponent
   def render(%{is_visible: false} = assigns) do
     ~H"""
-    <div class="hidden"></div>
+    <div id={@id} class="hidden"></div>
     """
   end
 
