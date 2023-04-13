@@ -3,6 +3,7 @@ defmodule AppWeb.BoardLive.Show do
 
   alias App.Boards
   alias App.Boards.Events
+  alias AppWeb.BoardLive.Components.Card
   alias App.Cards
 
   @impl true
@@ -11,7 +12,7 @@ defmodule AppWeb.BoardLive.Show do
       Boards.subscribe_to_board(board_id)
     end
 
-    {:ok, socket |> assign(width: 2000, height: 2000, board_id: board_id)}
+    {:ok, socket |> assign(width: 2000, height: 2000, board_id: board_id, current_card: nil)}
   end
 
   @impl Phoenix.LiveView
@@ -27,14 +28,13 @@ defmodule AppWeb.BoardLive.Show do
         phx-update="stream"
       >
         <%= for {id, card} <- @streams.cards do %>
-          <div
-            id={id}
-            class="min-h-[30px] min-w-[90px] absolute bg-gray-500 rounded-md select-none"
-            style={"left: #{card.x}px; top: #{card.y}px;"}
-            data-card-id={"#{card.id}"}
-            phx-hook="Card"
-          />
+          <Card.render id={id} card={card} />
         <% end %>
+        <.live_component
+          module={AppWeb.BoardLive.Components.CardEdit}
+          id="card-edit-modal"
+          card={@current_card}
+        />
       </div>
     </main>
     """
@@ -68,6 +68,11 @@ defmodule AppWeb.BoardLive.Show do
       _ ->
         {:noreply, socket}
     end
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("card-clicked", %{"data" => %{"id" => card_id}}, socket) do
+    {:noreply, socket |> assign(current_card: Cards.get_card!(card_id))}
   end
 
   @impl Phoenix.LiveView
