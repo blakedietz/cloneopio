@@ -8,6 +8,8 @@ defmodule App.Boards do
 
   alias App.Boards.Board
 
+  @pubsub App.PubSub
+
   @doc """
   Returns the list of boards.
 
@@ -101,4 +103,27 @@ defmodule App.Boards do
   def change_board(%Board{} = board, attrs \\ %{}) do
     Board.changeset(board, attrs)
   end
+
+  def subscribe_to_board(%Board{} = board) do
+    subscribe_to_board(board.id)
+  end
+
+  def subscribe_to_board(board_id) when is_binary(board_id) do
+    # TODO: @blakedietz 2023-04-10 - topic
+    Phoenix.PubSub.subscribe(@pubsub, topic(board_id))
+  end
+
+  def unsubscribe_to_board(%Board{} = board) do
+    unsubscribe_to_board(board.id)
+  end
+
+  def unsubscribe_to_board(board_id) when is_binary(board_id) do
+    Phoenix.PubSub.unsubscribe(@pubsub, topic(board_id))
+  end
+
+  def broadcast!(board_id, msg) when is_binary(board_id) do
+    Phoenix.PubSub.broadcast!(@pubsub, topic(board_id), {__MODULE__, msg})
+  end
+
+  defp topic(board_id) when is_binary(board_id), do: "board:#{board_id}"
 end

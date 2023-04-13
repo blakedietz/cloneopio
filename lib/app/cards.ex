@@ -4,9 +4,11 @@ defmodule App.Cards do
   """
 
   import Ecto.Query, warn: false
-  alias App.Repo
 
+  alias App.Boards
+  alias App.Boards.Events
   alias App.Cards.Card
+  alias App.Repo
 
   @doc """
   Returns the list of cards.
@@ -53,6 +55,14 @@ defmodule App.Cards do
     %Card{}
     |> Card.changeset(attrs)
     |> Repo.insert()
+    |> case do
+      {:ok, new_card} = result ->
+        Boards.broadcast!(new_card.board_id, %Events.CardCreated{card: new_card})
+        result
+
+      error ->
+        error
+    end
   end
 
   @doc """
@@ -100,5 +110,28 @@ defmodule App.Cards do
   """
   def change_card(%Card{} = card, attrs \\ %{}) do
     Card.changeset(card, attrs)
+  end
+
+  def move_card(%Card{} = card, attrs) do
+    card
+    |> Card.move_changeset(attrs)
+    |> Repo.update()
+    |> case do
+      {:ok, card} = result ->
+        Boards.broadcast!(card.board_id, %Events.CardMoved{card: card})
+        result
+
+      error ->
+        error
+    end
+  end
+
+  def list_cards_for_board_query(board_id) do
+    from(c in Card, where: c.board_id == ^board_id)
+  end
+
+  def list_cards_for_board(board_id) do
+    list_cards_for_board_query(board_id)
+    |> Repo.all()
   end
 end

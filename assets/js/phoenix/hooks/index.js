@@ -1,6 +1,9 @@
 import Board from "./board";
+import Card from "./card";
+
 const Hooks = {
-  Board
+  Board,
+  Card,
 };
 
 export default Hooks;

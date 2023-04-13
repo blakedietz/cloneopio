@@ -22,4 +22,13 @@ defmodule App.Cards.Card do
     |> cast(attrs, [:notes, :board_id, :x, :y])
     |> validate_required([])
   end
+
+  def move_changeset(card, attrs) do
+    required_attrs = []
+    optional_attrs = [:x, :y]
+
+    card
+    |> cast(attrs, required_attrs ++ optional_attrs)
+    |> validate_required(required_attrs)
+  end
 end
