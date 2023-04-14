@@ -1,8 +1,7 @@
-import { Displacement, displacement, hasDisplacement, Position } from "./movement";
+import { Displacement, displacement, hasDisplacement, Position } from "../card/movement";
+import { PhoenixLiveViewPushEventHandler } from "../card/card";
 
-export type PhoenixLiveViewPushEventHandler = (event: string, payload: object, onReply?: (reply: any, ref: any) => void) => void;
-
-export default class Card {
+export default class CardConnector {
   previousPosition: Position;
 
   private mouseMoveTriggered: boolean = false;
@@ -16,7 +15,7 @@ export default class Card {
   }
 
   private handleDragStart = (event: MouseEvent): void => {
-    console.log('browser:card:mousedown');
+    console.log('browser:card-connector:mousedown');
 
     document.addEventListener('mousemove', this.handleDrag);
     document.addEventListener('mouseup', this.handleDragEnd);
@@ -27,10 +26,11 @@ export default class Card {
     }
 
     this.setPreviousPosition(event);
+    event.stopImmediatePropagation();
   }
 
   private handleDrag = (event: MouseEvent): void => {
-    console.log('browser:card:mousemove');
+    console.log('browser:card-connector:mousemove');
 
     const newDisplacement = displacement({ x: this.previousPosition.x, y: this.previousPosition.y }, { x: event.clientX, y: event.clientY });
 
@@ -67,7 +67,7 @@ export default class Card {
     this.mouseMoveTriggered = false;
   };
 
-  private setPreviousPosition(event: MouseEvent): Card {
+  private setPreviousPosition(event: MouseEvent): CardConnector {
     this.previousPosition = {
       x: event.clientX,
       y: event.clientY
@@ -76,7 +76,7 @@ export default class Card {
     return this;
   };
 
-  private setElementDOMPosition({ δx, δy }: Displacement): Card {
+  private setElementDOMPosition({ δx, δy }: Displacement): CardConnector {
     this.element.style.left = `${this.element.offsetLeft - δx}px`;
     this.element.style.top = `${this.element.offsetTop - δy}px`;
     return this;

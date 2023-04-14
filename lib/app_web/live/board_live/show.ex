@@ -28,7 +28,9 @@ defmodule AppWeb.BoardLive.Show do
         phx-update="stream"
       >
         <%= for {id, card} <- @streams.cards do %>
-          <Card.render id={id} card={card} />
+          <div>
+            <Card.render id={id} card={card} />
+          </div>
         <% end %>
         <.live_component
           module={AppWeb.BoardLive.Components.CardEdit}
