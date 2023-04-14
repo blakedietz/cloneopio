@@ -6,4 +6,8 @@ defmodule App.Boards.Events do
   defmodule CardMoved do
     defstruct card: nil
   end
+
+  defmodule CardUpdated do
+    defstruct card: nil
+  end
 end

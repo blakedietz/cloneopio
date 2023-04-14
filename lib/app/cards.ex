@@ -81,6 +81,14 @@ defmodule App.Cards do
     card
     |> Card.changeset(attrs)
     |> Repo.update()
+    |> case do
+      {:ok, card} = result ->
+        Boards.broadcast!(card.board_id, %Events.CardUpdated{card: card})
+        result
+
+      error ->
+        error
+    end
   end
 
   @doc """

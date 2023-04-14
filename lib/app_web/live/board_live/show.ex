@@ -50,12 +50,20 @@ defmodule AppWeb.BoardLive.Show do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("user-clicked-board", %{"data" => data}, socket) do
+  def handle_event(
+        "user-clicked-board",
+        %{"data" => data},
+        %{assigns: %{current_card: nil}} = socket
+      ) do
     data
     |> Map.put("board_id", socket.assigns.board.id)
     |> Cards.create_card()
 
     {:noreply, socket}
+  end
+
+  def handle_event("user-clicked-board", _, socket) do
+    {:noreply, socket |> assign(current_card: nil)}
   end
 
   def handle_event("card-drag-end", %{"data" => %{"id" => id} = params}, socket) do
@@ -70,18 +78,25 @@ defmodule AppWeb.BoardLive.Show do
     end
   end
 
-  @impl Phoenix.LiveView
   def handle_event("card-clicked", %{"data" => %{"id" => card_id}}, socket) do
     {:noreply, socket |> assign(current_card: Cards.get_card!(card_id))}
   end
 
+  def handle_event("card-edit:click-away", _unsigned_params, socket) do
+    {:noreply, socket |> assign(current_card: nil)}
+  end
+
   @impl Phoenix.LiveView
+  def handle_info({Boards, %Events.CardCreated{card: card}}, socket) do
+    {:noreply, socket |> stream_insert(:cards, card)}
+  end
+
   def handle_info({Boards, %Events.CardMoved{card: card}}, socket) do
     {:noreply, socket |> stream_insert(:cards, card)}
   end
 
-  def handle_info({Boards, %Events.CardCreated{card: card}}, socket) do
-    {:noreply, socket |> stream_insert(:cards, card)}
+  def handle_info({Boards, %Events.CardUpdated{card: card}}, socket) do
+    {:noreply, socket |> stream_insert(:cards, card) |> assign(current_card: card)}
   end
 
   defp page_title(:show), do: "Show Board"
