@@ -2,7 +2,8 @@ import CardConnector from "./card-connector";
 const CardConnectorHook = {
   cardConnector: null,
   mounted() {
-    this.cardConnector = new CardConnector(this.el, this.pushEvent);
+    // TODO: (@blakedietz) - note this is a bad assumption with parentElement, should probably wire in more specific way of specifying.
+    this.cardConnector = new CardConnector(this.el, this.pushEvent.bind(this));
   }
 }
 

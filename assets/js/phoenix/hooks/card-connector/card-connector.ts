@@ -2,7 +2,10 @@ import { Displacement, displacement, hasDisplacement, Position } from "../card/m
 import { PhoenixLiveViewPushEventHandler } from "../card/card";
 
 export default class CardConnector {
-  previousPosition: Position;
+  private previousPosition: Position;
+  private connectorStart: Position;
+  private connectorEnd: Position;
+
 
   private mouseMoveTriggered: boolean = false;
   private readonly pushEvent: PhoenixLiveViewPushEventHandler;
@@ -20,10 +23,6 @@ export default class CardConnector {
     document.addEventListener('mousemove', this.handleDrag);
     document.addEventListener('mouseup', this.handleDragEnd);
     // Stop any interaction for mouse events
-    const board: HTMLElement | null = document.querySelector('#board');
-    if (board) {
-      board.style.pointerEvents = 'none';
-    }
 
     this.setPreviousPosition(event);
     event.stopImmediatePropagation();
@@ -37,32 +36,22 @@ export default class CardConnector {
     // Guard clause, no need to do anything if mouse movement hasn't happened.
     if (!hasDisplacement(newDisplacement)) return;
 
-    this
-      .setElementDOMPosition(newDisplacement)
-      .setPreviousPosition(event);
+    this.setPreviousPosition(event);
 
     this.mouseMoveTriggered = true;
   };
 
-  private handleDragEnd = (_event: MouseEvent): void => {
+  private handleDragEnd = (event: MouseEvent): void => {
     console.log('browser:card:mouseup');
 
-    if (this.mouseMoveTriggered && this.element) {
-      console.log('phx:card:card-drag-end');
+    // TODO: (@blakedietz) - potentially performance sensitive code
+    if (this.mouseMoveTriggered && this.element && isTargetChildOfCard(document.querySelectorAll(".card"), event)) {
+      console.log('phx:card-connector:card-drag-end');
       this.pushEvent('card-drag-end', { data: { y: this.element?.offsetTop, x: this.element?.offsetLeft, id: this?.element?.dataset?.cardId } });
-    }
-    else {
-      console.log('phx:card:card-clicked');
-      this.pushEvent('card-clicked', { data: { id: this?.element?.dataset?.cardId } });
     }
 
     document.removeEventListener('mousemove', this.handleDrag);
     document.removeEventListener('mouseup', this.handleDragEnd);
-
-    const board: HTMLElement | null = document.querySelector('#board');
-    if (board) {
-      board.style.pointerEvents = 'auto';
-    }
 
     this.mouseMoveTriggered = false;
   };
@@ -82,3 +71,15 @@ export default class CardConnector {
     return this;
   };
 }
+
+const isTargetChildOfCard = (cards: NodeList, event: MouseEvent): boolean => {
+  const result = [...cards].find((element) => {
+    if (event.target) {
+      return element.contains(event.target);
+    }
+    return false;
+  });
+
+  return result !== undefined;
+};
+
