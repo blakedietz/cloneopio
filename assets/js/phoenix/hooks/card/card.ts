@@ -17,7 +17,7 @@ export default class Card {
     element.addEventListener('mousedown', this.handleDragStart);
   }
 
-  private handleDragStart = (event: MouseEvent) => {
+  private handleDragStart = (event: MouseEvent): void => {
     console.log('browser:card:mousedown');
 
     document.addEventListener('mousemove', this.handleDrag);
@@ -31,11 +31,12 @@ export default class Card {
     this.setPreviousPosition(event);
   }
 
-  private handleDrag = (event: MouseEvent) => {
+  private handleDrag = (event: MouseEvent): void => {
     console.log('browser:card:mousemove');
 
     const newDisplacement = displacement({ x: this.previousPosition.x, y: this.previousPosition.y }, { x: event.clientX, y: event.clientY });
 
+    // Guard clause, no need to do anything if mouse movement hasn't happened.
     if (!hasDisplacement(newDisplacement)) return;
 
     this
@@ -43,9 +44,9 @@ export default class Card {
       .setPreviousPosition(event);
 
     this.mouseMoveTriggered = true;
-  }
+  };
 
-  private handleDragEnd = (_event: MouseEvent) => {
+  private handleDragEnd = (_event: MouseEvent): void => {
     console.log('browser:card:mouseup');
 
     if (this.mouseMoveTriggered && this.element) {
@@ -56,6 +57,7 @@ export default class Card {
       console.log('phx:card:card-clicked');
       this.pushEvent('card-clicked', { data: { id: this?.element?.dataset?.cardId } });
     }
+
     document.removeEventListener('mousemove', this.handleDrag);
     document.removeEventListener('mouseup', this.handleDragEnd);
 
@@ -65,20 +67,20 @@ export default class Card {
     }
 
     this.mouseMoveTriggered = false;
-  }
+  };
 
-  private setPreviousPosition(event: MouseEvent) {
+  private setPreviousPosition(event: MouseEvent): Card {
     this.previousPosition = {
       x: event.clientX,
       y: event.clientY
     };
 
     return this;
-  }
+  };
 
   private setElementDOMPosition({ δx, δy }: Displacement): Card {
     this.element.style.left = `${this.element.offsetLeft - δx}px`;
     this.element.style.top = `${this.element.offsetTop - δy}px`;
     return this;
-  }
+  };
 }
