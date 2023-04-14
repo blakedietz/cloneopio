@@ -4,9 +4,12 @@ export default class Card {
   x: string | null = null;
   y: string | null = null;
 
+  previousMouseMoveX: number = 0;
+  previousMouseMoveY: number = 0;
+
   private mouseMoveTriggered: boolean = false;
   private readonly pushEvent: PhoenixLiveViewPushEventHandler;
-  private readonly element: HTMLElement | null = null;
+  private readonly element: HTMLElement;
 
   constructor(element: HTMLElement, pushEvent: PhoenixLiveViewPushEventHandler) {
     this.pushEvent = pushEvent;
@@ -20,7 +23,7 @@ export default class Card {
     return { x: this.x, y: this.y };
   }
 
-  handleDragStart = (_event: MouseEvent) => {
+  handleDragStart = (event: MouseEvent) => {
     console.log('browser:card:mousedown');
 
     document.addEventListener('mousemove', this.handleDrag);
@@ -30,26 +33,37 @@ export default class Card {
     if (board) {
       board.style.pointerEvents = 'none';
     }
+
+    this.previousMouseMoveX = event.clientX;
+    this.previousMouseMoveY = event.clientY;
   }
 
   handleDrag = (event: MouseEvent) => {
     console.log('browser:card:mousemove');
 
     // TODO: (@blakedietz) - fix this code to use the previous top and left and take the difference to make a translation
-    if (this.element) {
-      this.element.style.top = `${event.offsetY}px`;
-      this.element.style.left = `${event.offsetX}px`;
+    const δx = this.previousMouseMoveX - event.clientX;
+    const δy = this.previousMouseMoveY - event.clientY;
+
+    if (δx === 0 && δy === 0) {
+      return;
     }
+
+    this.element.style.top = `${this.element.offsetTop - δy}px`;
+    this.element.style.left = `${this.element.offsetLeft - δx}px`;
+
+    this.previousMouseMoveX = event.clientX;
+    this.previousMouseMoveY = event.clientY;
 
     this.mouseMoveTriggered = true;
   }
 
-  handleDragEnd = (event: MouseEvent) => {
+  handleDragEnd = (_event: MouseEvent) => {
     console.log('browser:card:mouseup');
 
-    if (this.mouseMoveTriggered) {
+    if (this.mouseMoveTriggered && this.element) {
       console.log('phx:card:card-drag-end');
-      this.pushEvent('card-drag-end', { data: { y: event.offsetY, x: event.offsetX, id: this?.element?.dataset?.cardId } });
+      this.pushEvent('card-drag-end', { data: { y: this.element?.offsetTop, x: this.element?.offsetLeft, id: this?.element?.dataset?.cardId } });
     }
     else {
       console.log('phx:card:card-clicked');
@@ -62,5 +76,7 @@ export default class Card {
     if (board) {
       board.style.pointerEvents = 'auto';
     }
+
+    this.mouseMoveTriggered = false;
   }
 }
