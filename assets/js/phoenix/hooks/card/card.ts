@@ -1,11 +1,11 @@
+import { Displacement, displacement, hasDisplacement, Position } from "./movement";
+
 type PhoenixLiveViewPushEventHandler = (event: string, payload: object, onReply?: (reply: any, ref: any) => void) => void;
 
 export default class Card {
-  x: string | null = null;
-  y: string | null = null;
-
   previousMouseMoveX: number = 0;
   previousMouseMoveY: number = 0;
+  previousPosition: Position;
 
   private mouseMoveTriggered: boolean = false;
   private readonly pushEvent: PhoenixLiveViewPushEventHandler;
@@ -14,16 +14,10 @@ export default class Card {
   constructor(element: HTMLElement, pushEvent: PhoenixLiveViewPushEventHandler) {
     this.pushEvent = pushEvent;
     this.element = element;
-    this.x = element.style.left;
-    this.y = element.style.top;
     element.addEventListener('mousedown', this.handleDragStart);
   }
 
-  coordinates() {
-    return { x: this.x, y: this.y };
-  }
-
-  handleDragStart = (event: MouseEvent) => {
+  private handleDragStart = (event: MouseEvent) => {
     console.log('browser:card:mousedown');
 
     document.addEventListener('mousemove', this.handleDrag);
@@ -34,31 +28,24 @@ export default class Card {
       board.style.pointerEvents = 'none';
     }
 
-    this.previousMouseMoveX = event.clientX;
-    this.previousMouseMoveY = event.clientY;
+    this.setPreviousPosition(event);
   }
 
-  handleDrag = (event: MouseEvent) => {
+  private handleDrag = (event: MouseEvent) => {
     console.log('browser:card:mousemove');
 
-    // TODO: (@blakedietz) - fix this code to use the previous top and left and take the difference to make a translation
-    const δx = this.previousMouseMoveX - event.clientX;
-    const δy = this.previousMouseMoveY - event.clientY;
+    const newDisplacement = displacement({ x: this.previousPosition.x, y: this.previousPosition.y }, { x: event.clientX, y: event.clientY });
 
-    if (δx === 0 && δy === 0) {
-      return;
-    }
+    if (!hasDisplacement(newDisplacement)) return;
 
-    this.element.style.top = `${this.element.offsetTop - δy}px`;
-    this.element.style.left = `${this.element.offsetLeft - δx}px`;
-
-    this.previousMouseMoveX = event.clientX;
-    this.previousMouseMoveY = event.clientY;
+    this
+      .setElementDOMPosition(newDisplacement)
+      .setPreviousPosition(event);
 
     this.mouseMoveTriggered = true;
   }
 
-  handleDragEnd = (_event: MouseEvent) => {
+  private handleDragEnd = (_event: MouseEvent) => {
     console.log('browser:card:mouseup');
 
     if (this.mouseMoveTriggered && this.element) {
@@ -78,5 +65,20 @@ export default class Card {
     }
 
     this.mouseMoveTriggered = false;
+  }
+
+  private setPreviousPosition(event: MouseEvent) {
+    this.previousPosition = {
+      x: event.clientX,
+      y: event.clientY
+    };
+
+    return this;
+  }
+
+  private setElementDOMPosition({ δx, δy }: Displacement): Card {
+    this.element.style.left = `${this.element.offsetLeft - δx}px`;
+    this.element.style.top = `${this.element.offsetTop - δy}px`;
+    return this;
   }
 }
