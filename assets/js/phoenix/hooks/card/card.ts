@@ -1,12 +1,14 @@
+type PhoenixLiveViewPushEventHandler = (event: string, payload: object, onReply?: (reply: any, ref: any) => void) => void;
+
 export default class Card {
   x: string | null = null;
   y: string | null = null;
 
   private mouseMoveTriggered: boolean = false;
-  private readonly pushEvent: (message: string, event: { data: object }) => void;
+  private readonly pushEvent: PhoenixLiveViewPushEventHandler;
   private readonly element: HTMLElement | null = null;
 
-  constructor(element: HTMLElement, pushEvent) {
+  constructor(element: HTMLElement, pushEvent: PhoenixLiveViewPushEventHandler) {
     this.pushEvent = pushEvent;
     this.element = element;
     this.x = element.style.left;
