@@ -21,7 +21,7 @@ defmodule AppWeb.BoardLive.Show do
     <main class="relative">
       <svg class="absolute top-0 left-0" style={"width: #{@width}px; height: #{@height}px;"}></svg>
       <div
-        class="card absolute top-0 left-0"
+        class="absolute top-0 left-0"
         style={"width: #{@width}px; height: #{@height}px;"}
         phx-hook="Board"
         id="board"
