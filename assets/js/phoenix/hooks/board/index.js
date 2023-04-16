@@ -1,12 +1,13 @@
-const Board = {
-  currentlyDragging: null,
+import Board from "./board";
+
+const BoardHook = {
+  board: null,
   mounted() {
-    this.el.addEventListener('click', (e) => {
-      console.log('browser:board:mouseup');
-      console.log('phx:board:user-clicked-board');
-      this.pushEvent('user-clicked-board', { data: { y: e.offsetY, x: e.offsetX } });
-    });
+    this.board = new Board(this.el, this.pushEvent.bind(this));
+  },
+  destroyed() {
+    delete this.board;
   }
 };
 
-export default Board;
+export default BoardHook;
