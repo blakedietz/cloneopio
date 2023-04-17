@@ -116,6 +116,7 @@ export default class Board {
   }
 
   private handleClick = (event: MouseEvent): void => {
+    if (event.target.id !== "board") { return };
     console.log('browser:board:mouseup');
     console.log('phx:board:user-clicked-board');
 
