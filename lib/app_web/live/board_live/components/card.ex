@@ -16,7 +16,7 @@ defmodule AppWeb.BoardLive.Components.Card do
       <div
         phx-hook="CardConnector"
         id={"card-connector-#{@card.id}"}
-        class="w-[20px] flex flex-col h-full p-1"
+        class="card-connector w-[20px] flex flex-col h-full p-1 cursor-pointer"
       >
         <button class="rounded-full border-white border-2 p-1 h-[20px] w-[20px]" />
       </div>

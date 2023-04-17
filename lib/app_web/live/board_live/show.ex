@@ -19,7 +19,11 @@ defmodule AppWeb.BoardLive.Show do
   def render(assigns) do
     ~H"""
     <main class="relative">
-      <svg class="absolute top-0 left-0" style={"width: #{@width}px; height: #{@height}px;"}></svg>
+      <svg class="absolute top-0 left-0" style={"width: #{@width}px; height: #{@height}px;"}>
+        <g id="unconnected-connector">
+          <path class="pointer-events-all cursor-pointer fill-none stroke-black stroke-5 hidden" />
+        </g>
+      </svg>
       <div
         class="absolute top-0 left-0"
         style={"width: #{@width}px; height: #{@height}px;"}

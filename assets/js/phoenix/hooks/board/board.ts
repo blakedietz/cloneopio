@@ -17,10 +17,16 @@ export default class Board {
 
   private cards: Array<HTMLElement>;
   private draggedCards: Array<HTMLElement> = [];
+  private draggedConnection: { fromId: string | null, toId: string | null } = { fromId: null, toId: null };
 
   constructor(element: HTMLElement, pushEvent: PhoenixLiveViewPushEventHandler) {
     // @ts-ignore
     this.cards = [...document.querySelectorAll('.card')];
+    this.cards.forEach(card => {
+      card
+        ?.querySelector('.card-connector')
+        ?.addEventListener('mousedown', (event) => this.handleConnectorDragStart(card.dataset.cardId, event));
+    });
 
     this.element = element;
     this.element.addEventListener('mousedown', this.handleDragStart);
@@ -28,6 +34,60 @@ export default class Board {
 
     this.pushEvent = pushEvent;
   }
+
+  private handleConnectorDragStart = (cardId: string, event: MouseEvent): void => {
+    event.stopPropagation();
+    console.log('browser:board:card-connector:mousedown');
+    this.draggedConnection.fromId = cardId;
+    document.querySelector('#board').addEventListener('mousemove', this.handleConnectorDrag);
+    document.querySelector('#board').addEventListener('mousedown', this.handleConnectorDragEnd);
+
+    this.setPreviousDragPosition(event);
+  };
+
+  private handleConnectorDrag = (event: MouseEvent): void => {
+    console.log('browser:board:card-connector:mousemove');
+
+    const originatingCard = document.querySelector(`#cards-${this.draggedConnection.fromId}`);
+    const originatingCardConnector = document.querySelector(`#card-connector-${this.draggedConnection.fromId}`);
+    const cardConnector = originatingCardConnector?.getBoundingClientRect();
+    const targetedCard = this.cards.find(cardElement => cardElement.contains(event.target))
+
+    if (targetedCard) {
+      const startX = originatingCard.offsetLeft + originatingCardConnector.offsetLeft + (cardConnector.width / 2);
+      const startY = originatingCard.offsetTop + originatingCardConnector.offsetTop + (cardConnector.height / 2);
+
+      const targetedCardConnector = document.querySelector(`#card-connector-${targetedCard.dataset.cardId}`);
+
+      const endX = targetedCard.offsetLeft + targetedCardConnector.offsetLeft + (cardConnector.width / 2);
+      const endY = targetedCard.offsetTop + targetedCardConnector.offsetTop + (cardConnector.height / 2);
+
+      document.querySelector("#unconnected-connector path").setAttribute('d', `m${startX},${startY} q90,40 ${endX - startX},${endY - startY}`);
+    }
+    else {
+      const startX = originatingCard.offsetLeft + originatingCardConnector.offsetLeft + (cardConnector.width / 2);
+      const startY = originatingCard.offsetTop + originatingCardConnector.offsetTop + (cardConnector.height / 2);
+
+      const endX = event.offsetX;
+      const endY = event.offsetY;
+
+      document.querySelector("#unconnected-connector path").setAttribute('d', `m${startX},${startY} q90,40 ${endX - startX},${endY - startY}`);
+    }
+
+    document.querySelector("#unconnected-connector path")?.classList.remove('hidden');
+
+
+    // TODO: (@blakedietz) - get current card drag from position
+    // TODO: (@blakedietz) - get client x and y
+    // TODO: (@blakedietz) - draw a line on the svg
+
+    this.setPreviousDragPosition(event);
+    this.mouseMoveTriggered = true;
+  };
+  private handleConnectorDragEnd = (event: MouseEvent): void => {
+    // TODO: (@blakedietz) - drag on board => new card
+    // TODO: (@blakedietz) - drag on card => new connection
+  };
 
   private handleDragStart = (event: MouseEvent): void => {
     console.log('browser:board:mousedown');
@@ -74,6 +134,7 @@ export default class Board {
     this.draggedCards.forEach((card) => {
       // console.log(event.target);
       this.setElementDOMPosition(card, newDisplacement);
+      // TODO: (@blakedietz) - set card connection positions
     })
 
     this.setPreviousDragPosition(event);
