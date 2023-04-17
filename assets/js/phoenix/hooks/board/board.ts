@@ -14,12 +14,14 @@ export default class Board {
 
   private readonly element: HTMLElement;
   private readonly pushEvent: PhoenixLiveViewPushEventHandler;
+  private readonly handleEvent;
 
   private cards: Array<HTMLElement>;
+  private edges: Map<string, [{ fromId: string, toId: string | null }]>;;
   private draggedCards: Array<HTMLElement> = [];
   private draggedConnection: { fromId: string | null, toId: string | null } = { fromId: null, toId: null };
 
-  constructor(element: HTMLElement, pushEvent: PhoenixLiveViewPushEventHandler) {
+  constructor(element: HTMLElement, pushEvent: PhoenixLiveViewPushEventHandler, handleEvent) {
     // @ts-ignore
     this.cards = [...document.querySelectorAll('.card')];
     this.cards.forEach(card => {
@@ -30,17 +32,29 @@ export default class Board {
 
     this.element = element;
     this.element.addEventListener('mousedown', this.handleDragStart);
-    // this.element.addEventListener('click', this.handleClick);
+    // TODO: (@blakedietz) - this is not working as expected when dragging card connectors
+    this.element.addEventListener('click', this.handleClick);
 
     this.pushEvent = pushEvent;
+    this.handleEvent = handleEvent;
+
+    this.handleEvent('edge-created', this.handleEdgeCreated);
+    this.edges = new Map();
   }
+
+  private handleEdgeCreated = (data) => {
+    const { edge: { previous_node_id: fromId, next_node_id: toId } } = data;
+    const edgesForCard = this.edges.get(fromId) ?? [];
+
+    this.edges.set(fromId, [...edgesForCard, data.edge]);
+  };
 
   private handleConnectorDragStart = (cardId: string, event: MouseEvent): void => {
     event.stopPropagation();
     console.log('browser:board:card-connector:mousedown');
     this.draggedConnection.fromId = cardId;
     document.querySelector('#board').addEventListener('mousemove', this.handleConnectorDrag);
-    document.querySelector('#board').addEventListener('mousedown', this.handleConnectorDragEnd);
+    document.querySelector('#board').addEventListener('mouseup', this.handleConnectorDragEnd);
 
     this.setPreviousDragPosition(event);
   };
@@ -76,17 +90,24 @@ export default class Board {
 
     document.querySelector("#unconnected-connector path")?.classList.remove('hidden');
 
-
-    // TODO: (@blakedietz) - get current card drag from position
-    // TODO: (@blakedietz) - get client x and y
-    // TODO: (@blakedietz) - draw a line on the svg
-
     this.setPreviousDragPosition(event);
     this.mouseMoveTriggered = true;
   };
+
   private handleConnectorDragEnd = (event: MouseEvent): void => {
-    // TODO: (@blakedietz) - drag on board => new card
-    // TODO: (@blakedietz) - drag on card => new connection
+    const targetedCard = this.cards.find(cardElement => cardElement.contains(event.target));
+
+    if (targetedCard) {
+      // TODO: (@blakedietz) - check if already dragged over existing card that's connected
+      this.pushEvent('card-connected', { data: { previous_node_id: this.draggedConnection.fromId, next_node_id: targetedCard.dataset.cardId } }, (reply, ref) => {
+        console.log({ reply, ref });
+      });
+    }
+    else {
+      this.pushEvent('create-card-with-connection', { data: {} })
+      this.pushEvent('user-clicked-board', { data: { fromId: this.draggedConnection.fromId, y: event.offsetY, x: event.offsetX } });
+    }
+    event.stopImmediatePropagation();
   };
 
   private handleDragStart = (event: MouseEvent): void => {
@@ -101,8 +122,6 @@ export default class Board {
       this.handleCardDragStart(event);
     }
 
-    // Stop any interaction for mouse events
-
     this.setPreviousDragPosition(event);
   }
 
@@ -110,6 +129,7 @@ export default class Board {
     console.log('browser:board:mouseup');
     console.log('phx:board:user-clicked-board');
 
+    // TODO: (@blakedietz) - once a card is created add it to the board may want to do this from the card hook instead
     this.pushEvent('user-clicked-board', { data: { y: event.offsetY, x: event.offsetX } });
   };
 

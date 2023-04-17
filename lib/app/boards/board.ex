@@ -3,12 +3,14 @@ defmodule App.Boards.Board do
   import Ecto.Changeset
 
   alias App.Accounts.User
+  alias App.Cards.Edge
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "boards" do
     field :name, :string
     belongs_to :user, User
+    has_many :card_edges, Edge
 
     timestamps()
   end

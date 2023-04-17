@@ -19,10 +19,26 @@ defmodule AppWeb.BoardLive.Show do
   def render(assigns) do
     ~H"""
     <main class="relative">
-      <svg class="absolute top-0 left-0" style={"width: #{@width}px; height: #{@height}px;"}>
+      <svg
+        id="edges"
+        class="absolute top-0 left-0"
+        style={"width: #{@width}px; height: #{@height}px;"}
+        phx-update="stream"
+      >
         <g id="unconnected-connector">
           <path class="pointer-events-all cursor-pointer fill-none stroke-black stroke-5 hidden" />
         </g>
+        <%= for {id, edge} <- @streams.edges do %>
+          <g
+            id={id}
+            data-edge-id={edge.id}
+            data-previous-node-id={edge.previous_node_id}
+            data-next-node-id={edge.next_node_id}
+            phx-hook="CardConnector"
+          >
+            <path class="pointer-events-all cursor-pointer fill-none stroke-black stroke-5" />
+          </g>
+        <% end %>
       </svg>
       <div
         class="absolute top-0 left-0"
@@ -52,7 +68,8 @@ defmodule AppWeb.BoardLive.Show do
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
      |> assign(:board, Boards.get_board!(id))
-     |> stream(:cards, Cards.list_cards_for_board(id))}
+     |> stream(:cards, Cards.list_cards_for_board(id))
+     |> stream(:edges, Cards.list_edges_for_board(id))}
   end
 
   @impl Phoenix.LiveView
@@ -93,6 +110,21 @@ defmodule AppWeb.BoardLive.Show do
   end
 
   @impl Phoenix.LiveView
+  def handle_event(
+        "card-connected",
+        %{
+          "data" => new_edge_attrs
+        },
+        socket
+      ) do
+    new_edge_attrs
+    |> Map.put("board_id", socket.assigns.board.id)
+    |> Cards.create_edge()
+
+    {:noreply, socket}
+  end
+
+  @impl Phoenix.LiveView
   def handle_info({Boards, %Events.CardCreated{card: card}}, socket) do
     {:noreply, socket |> stream_insert(:cards, card)}
   end
@@ -103,6 +135,10 @@ defmodule AppWeb.BoardLive.Show do
 
   def handle_info({Boards, %Events.CardUpdated{card: card}}, socket) do
     {:noreply, socket |> stream_insert(:cards, card) |> assign(current_card: card)}
+  end
+
+  def handle_info({Boards, %Events.EdgeCreated{edge: edge}}, socket) do
+    {:noreply, socket |> stream_insert(:edges, edge)}
   end
 
   defp page_title(:show), do: "Show Board"

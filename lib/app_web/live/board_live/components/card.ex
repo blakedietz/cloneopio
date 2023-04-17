@@ -14,7 +14,6 @@ defmodule AppWeb.BoardLive.Components.Card do
         <%= @card.notes %>
       </div>
       <div
-        phx-hook="CardConnector"
         id={"card-connector-#{@card.id}"}
         class="card-connector w-[20px] flex flex-col h-full p-1 cursor-pointer"
       >

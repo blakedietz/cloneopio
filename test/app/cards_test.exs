@@ -56,4 +56,56 @@ defmodule App.CardsTest do
       assert %Ecto.Changeset{} = Cards.change_card(card)
     end
   end
+
+  describe "card_edges" do
+    alias App.Cards.Edge
+
+    import App.CardsFixtures
+
+    @invalid_attrs %{}
+
+    test "list_card_edges/0 returns all card_edges" do
+      edge = edge_fixture()
+      assert Cards.list_card_edges() == [edge]
+    end
+
+    test "get_edge!/1 returns the edge with given id" do
+      edge = edge_fixture()
+      assert Cards.get_edge!(edge.id) == edge
+    end
+
+    test "create_edge/1 with valid data creates a edge" do
+      valid_attrs = %{}
+
+      assert {:ok, %Edge{} = edge} = Cards.create_edge(valid_attrs)
+    end
+
+    test "create_edge/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Cards.create_edge(@invalid_attrs)
+    end
+
+    test "update_edge/2 with valid data updates the edge" do
+      edge = edge_fixture()
+      update_attrs = %{}
+
+      assert {:ok, %Edge{} = edge} = Cards.update_edge(edge, update_attrs)
+    end
+
+    test "update_edge/2 with invalid data returns error changeset" do
+      edge = edge_fixture()
+      assert {:error, %Ecto.Changeset{}} = Cards.update_edge(edge, @invalid_attrs)
+      assert edge == Cards.get_edge!(edge.id)
+    end
+
+    test "delete_edge/1 deletes the edge" do
+      edge = edge_fixture()
+      assert {:ok, %Edge{}} = Cards.delete_edge(edge)
+      assert_raise Ecto.NoResultsError, fn -> Cards.get_edge!(edge.id) end
+    end
+
+    test "change_edge/1 returns a edge changeset" do
+      edge = edge_fixture()
+      assert %Ecto.Changeset{} = Cards.change_edge(edge)
+    end
+  end
 end

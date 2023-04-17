@@ -10,4 +10,8 @@ defmodule App.Boards.Events do
   defmodule CardUpdated do
     defstruct card: nil
   end
+
+  defmodule EdgeCreated do
+    defstruct edge: nil
+  end
 end

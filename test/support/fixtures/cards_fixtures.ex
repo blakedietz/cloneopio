@@ -17,4 +17,18 @@ defmodule App.CardsFixtures do
 
     card
   end
+
+  @doc """
+  Generate a edge.
+  """
+  def edge_fixture(attrs \\ %{}) do
+    {:ok, edge} =
+      attrs
+      |> Enum.into(%{
+
+      })
+      |> App.Cards.create_edge()
+
+    edge
+  end
 end
