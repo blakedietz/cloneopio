@@ -40,8 +40,8 @@ export default class Board {
     event.stopPropagation();
     console.log('browser:board:card-connector:mousedown');
     this.draggedConnection.fromId = cardId;
-    document.querySelector('#board').addEventListener('mousemove', this.handleConnectorDrag);
-    document.querySelector('#board').addEventListener('mouseup', this.handleConnectorDragEnd, { once: true });
+    this.element.addEventListener('mousemove', this.handleConnectorDrag);
+    this.element.addEventListener('mouseup', this.handleConnectorDragEnd);
 
     this.setPreviousDragPosition(event);
   };
@@ -95,7 +95,8 @@ export default class Board {
       this.pushEvent('user-clicked-board', { data: { fromId: this.draggedConnection.fromId, y: event.offsetY, x: event.offsetX } });
     }
     event.stopImmediatePropagation();
-    document.querySelector('#board')?.removeEventListener('mousemove', this.handleConnectorDrag);
+    this.element.removeEventListener('mousemove', this.handleConnectorDrag);
+    this.element.removeEventListener('mouseup', this.handleConnectorDragEnd);
     document.querySelector("#unconnected-connector path")?.classList.add('hidden');
   };
 
