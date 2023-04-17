@@ -34,8 +34,6 @@ export default class Board {
     this.element.addEventListener('mouseup', this.handleClick);
 
     this.pushEvent = pushEvent;
-
-    this.edges = new Map();
   }
 
   private handleConnectorDragStart = (cardId: string, event: MouseEvent): void => {
