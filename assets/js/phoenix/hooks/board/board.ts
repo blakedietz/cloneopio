@@ -197,10 +197,4 @@ export default class Board {
 
     return result;
   };
-
-  private isTargetChildOfCard(cards: [Element], event: MouseEvent): boolean {
-    const targetedCard = this.findTargetedCard(cards, event)
-
-    return targetedCard !== undefined;
-  };
 };
