@@ -14,14 +14,12 @@ export default class Board {
 
   private readonly element: HTMLElement;
   private readonly pushEvent: PhoenixLiveViewPushEventHandler;
-  private readonly handleEvent;
 
   private cards: Array<HTMLElement>;
-  private edges: Map<string, [{ fromId: string, toId: string | null }]>;;
   private draggedCards: Array<HTMLElement> = [];
   private draggedConnection: { fromId: string | null, toId: string | null } = { fromId: null, toId: null };
 
-  constructor(element: HTMLElement, pushEvent: PhoenixLiveViewPushEventHandler, handleEvent) {
+  constructor(element: HTMLElement, pushEvent: PhoenixLiveViewPushEventHandler) {
     // @ts-ignore
     this.cards = [...document.querySelectorAll('.card')];
     this.cards.forEach(card => {
@@ -36,18 +34,9 @@ export default class Board {
     this.element.addEventListener('click', this.handleClick);
 
     this.pushEvent = pushEvent;
-    this.handleEvent = handleEvent;
 
-    this.handleEvent('edge-created', this.handleEdgeCreated);
     this.edges = new Map();
   }
-
-  private handleEdgeCreated = (data) => {
-    const { edge: { previous_node_id: fromId, next_node_id: toId } } = data;
-    const edgesForCard = this.edges.get(fromId) ?? [];
-
-    this.edges.set(fromId, [...edgesForCard, data.edge]);
-  };
 
   private handleConnectorDragStart = (cardId: string, event: MouseEvent): void => {
     event.stopPropagation();
