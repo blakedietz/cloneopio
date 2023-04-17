@@ -12,28 +12,37 @@ export default class Board {
 
   private mouseMoveTriggered: boolean = false;
 
-  private readonly element: HTMLElement;
-  private readonly pushEvent: PhoenixLiveViewPushEventHandler;
+  private element: HTMLElement;
+  private pushEvent: PhoenixLiveViewPushEventHandler;
 
-  private cards: Array<HTMLElement>;
+  private cards: Array<HTMLElement> = [];
+  private connections: Array<{ previousNodeId: string, nextNodeId: string }> = [];
   private draggedCards: Array<HTMLElement> = [];
   private draggedConnection: { fromId: string | null, toId: string | null } = { fromId: null, toId: null };
 
-  constructor(element: HTMLElement, pushEvent: PhoenixLiveViewPushEventHandler) {
-    // @ts-ignore
-    this.cards = [...document.querySelectorAll('.card')];
-    this.cards.forEach(card => {
-      card
-        ?.querySelector('.card-connector')
-        ?.addEventListener('mousedown', (event) => this.handleConnectorDragStart(card.dataset.cardId, event));
-    });
-
+  public setElement = (element: HTMLElement) => {
     this.element = element;
     this.element.addEventListener('mousedown', this.handleDragStart);
-    // TODO: (@blakedietz) - this is not working as expected when dragging card connectors
     this.element.addEventListener('mouseup', this.handleClick);
+    return this;
+  }
 
+  public setPushEvent = (pushEvent: PhoenixLiveViewPushEventHandler) => {
     this.pushEvent = pushEvent;
+    return this;
+  }
+
+  public addCard = (card: HTMLElement) => {
+    this.cards.push(card);
+    card
+      ?.querySelector('.card-connector')
+      ?.addEventListener('mousedown', (event) => this.handleConnectorDragStart(card.dataset.cardId, event));
+    return this;
+  }
+
+  public addConnection = (connection) => {
+    this.connections.push(connection);
+    return this;
   }
 
   private handleConnectorDragStart = (cardId: string, event: MouseEvent): void => {

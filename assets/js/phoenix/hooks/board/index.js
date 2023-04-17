@@ -1,12 +1,13 @@
-import Board from "./board";
-
+import { getBoard } from "./board-singleton";
 const BoardHook = {
-  board: null,
   mounted() {
-    this.board = new Board(this.el, this.pushEvent.bind(this));
+    getBoard()
+      .setElement(this.el)
+      .setPushEvent(this.pushEvent.bind(this));
+
   },
   destroyed() {
-    delete this.board;
+    // TODO: (@blakedietz) - notify the board and reset
   }
 };
 

@@ -26,26 +26,26 @@ defmodule AppWeb.BoardLive.Show do
         phx-update="stream"
       >
         <g id="unconnected-connector">
-          <path class="pointer-events-all cursor-pointer fill-none stroke-black stroke-5 hidden" />
+          <path class="pointer-events-all cursor-pointer fill-none stroke-black stroke-2 hidden" />
         </g>
         <%= for {id, edge} <- @streams.edges do %>
           <g
-            id={id}
             data-edge-id={edge.id}
-            data-previous-node-id={edge.previous_node_id}
             data-next-node-id={edge.next_node_id}
+            data-previous-node-id={edge.previous_node_id}
+            id={id}
             phx-hook="CardConnector"
           >
-            <path class="pointer-events-all cursor-pointer fill-none stroke-black stroke-5" />
+            <path class="pointer-events-all cursor-pointer fill-none stroke-black stroke-2" />
           </g>
         <% end %>
       </svg>
       <div
         class="absolute top-0 left-0"
-        style={"width: #{@width}px; height: #{@height}px;"}
-        phx-hook="Board"
         id="board"
+        phx-hook="Board"
         phx-update="stream"
+        style={"width: #{@width}px; height: #{@height}px;"}
       >
         <%= for {id, card} <- @streams.cards do %>
           <div>
