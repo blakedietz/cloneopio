@@ -31,7 +31,7 @@ export default class Board {
     this.element = element;
     this.element.addEventListener('mousedown', this.handleDragStart);
     // TODO: (@blakedietz) - this is not working as expected when dragging card connectors
-    this.element.addEventListener('click', this.handleClick);
+    this.element.addEventListener('mouseup', this.handleClick);
 
     this.pushEvent = pushEvent;
 
@@ -43,7 +43,7 @@ export default class Board {
     console.log('browser:board:card-connector:mousedown');
     this.draggedConnection.fromId = cardId;
     document.querySelector('#board').addEventListener('mousemove', this.handleConnectorDrag);
-    document.querySelector('#board').addEventListener('mouseup', this.handleConnectorDragEnd);
+    document.querySelector('#board').addEventListener('mouseup', this.handleConnectorDragEnd, { once: true });
 
     this.setPreviousDragPosition(event);
   };
@@ -97,7 +97,10 @@ export default class Board {
       this.pushEvent('user-clicked-board', { data: { fromId: this.draggedConnection.fromId, y: event.offsetY, x: event.offsetX } });
     }
     event.stopImmediatePropagation();
+    document.querySelector('#board')?.removeEventListener('mousemove', this.handleConnectorDrag);
+    document.querySelector("#unconnected-connector path")?.classList.add('hidden');
   };
+
 
   private handleDragStart = (event: MouseEvent): void => {
     console.log('browser:board:mousedown');
