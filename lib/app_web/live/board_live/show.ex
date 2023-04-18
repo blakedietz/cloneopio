@@ -109,7 +109,6 @@ defmodule AppWeb.BoardLive.Show do
     {:noreply, socket |> assign(current_card: nil)}
   end
 
-  @impl Phoenix.LiveView
   def handle_event(
         "card-connected",
         %{
@@ -120,6 +119,13 @@ defmodule AppWeb.BoardLive.Show do
     new_edge_attrs
     |> Map.put("board_id", socket.assigns.board.id)
     |> Cards.create_edge()
+
+    {:noreply, socket}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("create-card-with-connection", %{"data" => data}, socket) do
+    # TODO: @blakedietz 2023-04-17 - implement
 
     {:noreply, socket}
   end

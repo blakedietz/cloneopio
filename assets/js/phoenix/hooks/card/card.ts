@@ -8,8 +8,42 @@ import {
 export type PhoenixLiveViewPushEventHandler = (event: string, payload: object, onReply?: (reply: any, ref: any) => void) => void;
 
 export default class Card {
-  constructor(element: HTMLElement, pushEvent: PhoenixLiveViewPushEventHandler) {
-    this.pushEvent = pushEvent;
-    this.element = element;
+  private readonly hookInstance;
+
+  constructor(hookInstance) {
+    this.hookInstance = hookInstance;
+  }
+
+  public drag(event: MouseEvent) {
+    const element = this.hookInstance.el;
+
+    element.style.left = `${element.offsetLeft + event.movementX}px`;
+    element.style.top = `${element.offsetTop + event.movementY}px`;
+  }
+
+  public addMouseMoveHandlerToConnector(handler) {
+    this.hookInstance.el
+      ?.querySelector('.card-connector')
+      ?.addEventListener('mousedown', (event) => handler(this.id, event));
+
+    return this;
+  }
+
+  public getConnectorCoordinates() {
+    const cardElement = this.hookInstance.el;
+    const cardConnectorElement = cardElement.querySelector('.card-connector');
+    const { width: cardConnectorWidth, height: cardConnectorHeight } = cardConnectorElement.getBoundingClientRect();
+    const x = cardElement.offsetLeft + cardConnectorElement.offsetLeft + (cardConnectorWidth / 2);
+    const y = cardElement.offsetTop + cardConnectorElement.offsetTop + (cardConnectorHeight / 2);
+
+    return { x, y };
+  }
+
+  public containsEventTarget = (event: MouseEvent): boolean => {
+    return this.hookInstance.el.contains(event.target);
+  }
+
+  get id() {
+    return this.hookInstance.el.dataset.cardId;
   }
 }
