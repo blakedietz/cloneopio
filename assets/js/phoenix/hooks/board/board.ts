@@ -131,12 +131,13 @@ export default class Board {
 
   private handleCardDragEnd = (event: MouseEvent): void => {
     console.log('browser:board:mouseup');
+    const targetedCard = this.findTargetedCard(this.cards, event);
 
     // TODO: (@blakedietz) - pretty sure I could check the target here 
-    if (this.findTargetedCard(this.cards, event)) {
+    if (targetedCard) {
       console.log('phx:board:card-drag-end');
       // TODO: (@blakedietz) - fix this to send out data for all moved cards
-      this.pushEvent('card-drag-end', { data: { y: this.element?.offsetTop, x: this.element?.offsetLeft, id: this?.element?.dataset?.cardId } });
+      this.pushEvent('card-drag-end', { data: { ...targetedCard.getCoordinates(), id: targetedCard.id } });
     }
     else {
       console.log('phx:board:card-clicked');
@@ -158,7 +159,7 @@ export default class Board {
     return this;
   };
 
-  private findTargetedCard(cards: [Card], event: MouseEvent): Element | undefined {
+  private findTargetedCard(cards: [Card], event: MouseEvent): Card | undefined {
     const result = cards.find((card) => {
       if (event.target) {
         // @ts-ignore

@@ -21,6 +21,12 @@ export default class Card {
     element.style.top = `${element.offsetTop + event.movementY}px`;
   }
 
+  public getCoordinates() {
+    const element = this.hookInstance.el;
+
+    return { y: element?.offsetTop, x: element?.offsetLeft };
+  }
+
   public addMouseMoveHandlerToConnector(handler) {
     this.hookInstance.el
       ?.querySelector('.card-connector')
