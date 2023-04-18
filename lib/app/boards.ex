@@ -114,7 +114,7 @@ defmodule App.Boards do
     |> Ecto.Multi.insert(:edge, fn %{card: %{id: next_node_id}} ->
       attrs_with_new_card = attrs |> Map.put("next_node_id", next_node_id)
 
-      Cards.change_edge(%Edge{}, attrs_with_new_card) |> IO.inspect()
+      Cards.change_edge(%Edge{}, attrs_with_new_card)
     end)
   end
 
