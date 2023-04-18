@@ -124,7 +124,9 @@ defmodule AppWeb.BoardLive.Show do
   end
 
   def handle_event("create-card-with-connection", %{"data" => data}, socket) do
-    # TODO: @blakedietz 2023-04-17 - implement
+    data
+    |> Map.put("board_id", socket.assigns.board.id)
+    |> Boards.create_card_with_connection()
 
     {:noreply, socket}
   end

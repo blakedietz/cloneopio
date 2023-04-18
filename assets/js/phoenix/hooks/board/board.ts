@@ -61,6 +61,7 @@ export default class Board {
   }
 
   public renderConnection = (hookInstance) => {
+    // TODO: (@blakedietz) - fix this api so you don't need to know the details of dataset
     this.connections.get(hookInstance.el.dataset.edgeId).render();
 
     return this;
@@ -73,6 +74,7 @@ export default class Board {
     this.draggedConnection.fromId = cardId;
     this.element.addEventListener('mousemove', this.handleConnectorDrag);
     this.element.addEventListener('mouseup', this.handleConnectorDragEnd);
+    this.element.removeEventListener('mouseup', this.handleClick);
   };
 
   private handleConnectorDrag = (event: MouseEvent): void => {
@@ -106,6 +108,7 @@ export default class Board {
     event.stopImmediatePropagation();
     this.element.removeEventListener('mousemove', this.handleConnectorDrag);
     this.element.removeEventListener('mouseup', this.handleConnectorDragEnd);
+    this.element.addEventListener('mouseup', this.handleClick);
     document.querySelector("#unconnected-connector path")?.classList.add('hidden');
   };
 

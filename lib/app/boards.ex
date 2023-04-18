@@ -7,6 +7,10 @@ defmodule App.Boards do
   alias App.Repo
 
   alias App.Boards.Board
+  alias App.Cards
+  alias App.Cards.Card
+  alias App.Cards.Edge
+  alias App.Boards.Events
 
   @pubsub App.PubSub
 
@@ -102,6 +106,31 @@ defmodule App.Boards do
   """
   def change_board(%Board{} = board, attrs \\ %{}) do
     Board.changeset(board, attrs)
+  end
+
+  def create_card_with_connection_multi(attrs) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(:card, Cards.change_card(%Card{}, attrs))
+    |> Ecto.Multi.insert(:edge, fn %{card: %{id: next_node_id}} ->
+      attrs_with_new_card = attrs |> Map.put("next_node_id", next_node_id)
+
+      Cards.change_edge(%Edge{}, attrs_with_new_card) |> IO.inspect()
+    end)
+  end
+
+  def create_card_with_connection(attrs) do
+    attrs
+    |> create_card_with_connection_multi()
+    |> App.Repo.transaction()
+    |> case do
+      {:ok, %{card: new_card, edge: edge}} = result ->
+        broadcast!(new_card.board_id, %Events.CardCreated{card: new_card})
+        broadcast!(edge.board_id, %Events.EdgeCreated{edge: edge})
+        result
+
+      error ->
+        error
+    end
   end
 
   def subscribe_to_board(%Board{} = board) do
