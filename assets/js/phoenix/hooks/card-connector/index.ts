@@ -1,4 +1,3 @@
-import CardConnector from "./card-connector";
 import { getBoard } from "../board/board-singleton";
 
 const CardConnectorHook = {

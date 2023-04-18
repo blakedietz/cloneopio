@@ -1,13 +1,9 @@
-import {
-  Displacement,
-  Position,
-  displacement,
-  hasDisplacement,
-} from "../card/movement";
 import Card from "../card/card";
 import CardConnector from "../card-connector/card-connector";
 
 import { PhoenixLiveViewPushEventHandler } from "../card/card";
+
+type BoardState = 'board-being-viewd' | 'edit-modal-opened' | 'card-being-dragged' | 'connection-being-dragged';
 
 export default class Board {
   private mouseMoveTriggered: boolean = false;
