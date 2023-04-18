@@ -10,8 +10,6 @@ import CardConnector from "../card-connector/card-connector";
 import { PhoenixLiveViewPushEventHandler } from "../card/card";
 
 export default class Board {
-  previousPosition: Position;
-
   private mouseMoveTriggered: boolean = false;
   private element: HTMLElement;
   private pushEvent: PhoenixLiveViewPushEventHandler;
@@ -20,6 +18,7 @@ export default class Board {
   private connections: Map<string, CardConnector> = new Map();
   private draggedCards: Array<Card> = [];
   private draggedConnection: { fromId: string | null, toId: string | null } = { fromId: null, toId: null };
+
 
   public setElement = (element: HTMLElement) => {
     this.element = element;
@@ -171,15 +170,6 @@ export default class Board {
 
     this.mouseMoveTriggered = false;
     this.draggedCards = [];
-  };
-
-  private setPreviousDragPosition(event: MouseEvent): Board {
-    this.previousPosition = {
-      x: event.clientX,
-      y: event.clientY
-    };
-
-    return this;
   };
 
   private findTargetedCard(cards: [Card], event: MouseEvent): Card | undefined {
