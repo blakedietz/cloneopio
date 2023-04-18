@@ -1,9 +1,10 @@
 export default class CardConnector {
-  private readonly element: HTMLElement;
+  private readonly hookInstance;
 
-  constructor(element) {
-    this.element = element;
+  constructor(hookInstance) {
+    this.hookInstance = hookInstance;
   }
+
   public render() {
     const path = this.element.querySelector('path');
     const originatingCard = document.querySelector(`#cards-${this.element.dataset.previousNodeId}`);
@@ -20,6 +21,22 @@ export default class CardConnector {
     const endY = targetedCard.offsetTop + targetedCardConnector.offsetTop + (cardConnector.height / 2);
 
     path.setAttribute('d', `m${startX},${startY} q90,40 ${endX - startX},${endY - startY}`);
+  }
+
+  get id() {
+    return this.element.dataset.edgeId;
+  }
+
+  get previousNodeId() {
+    return this.element.dataset.previousNodeId;
+  }
+
+  get nextNodeId() {
+    return this.element.dataset.nextNodeId;
+  }
+
+  get element() {
+    return this.hookInstance.el;
   }
 }
 

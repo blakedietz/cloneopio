@@ -1,15 +1,16 @@
 import CardConnector from "./card-connector";
 import { getBoard } from "../board/board-singleton";
+
 const CardConnectorHook = {
   cardConnector: null,
   mounted() {
-    getBoard().addConnection(this.el);
-
-    this.cardConnector = new CardConnector(this.el);
-    this.cardConnector.render();
+    getBoard()
+      .addConnection(this)
+      .renderConnection(this);
   },
   updated() {
-    this.cardConnector.render();
+    getBoard()
+      .renderConnection(this);
   }
 }
 

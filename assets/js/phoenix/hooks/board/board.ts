@@ -5,6 +5,7 @@ import {
   hasDisplacement,
 } from "../card/movement";
 import Card from "../card/card";
+import CardConnector from "../card-connector/card-connector";
 
 import { PhoenixLiveViewPushEventHandler } from "../card/card";
 
@@ -16,7 +17,7 @@ export default class Board {
   private pushEvent: PhoenixLiveViewPushEventHandler;
 
   private cards: Array<Card> = [];
-  private connections: Array<{ previousNodeId: string, nextNodeId: string }> = [];
+  private connections: Map<string, CardConnector> = new Map();
   private draggedCards: Array<Card> = [];
   private draggedConnection: { fromId: string | null, toId: string | null } = { fromId: null, toId: null };
 
@@ -24,11 +25,13 @@ export default class Board {
     this.element = element;
     this.element.addEventListener('mousedown', this.handleDragStart);
     this.element.addEventListener('mouseup', this.handleClick);
+
     return this;
   }
 
   public setPushEvent = (pushEvent: PhoenixLiveViewPushEventHandler) => {
     this.pushEvent = pushEvent;
+
     return this;
   }
 
@@ -39,27 +42,35 @@ export default class Board {
     return this;
   }
 
-  public addConnection = (connection) => {
-    this.connections.push(connection);
+  public addConnection = (hookInstance) => {
+    const newCardConnection = new CardConnector(hookInstance)
+    this.connections.set(newCardConnection.id, newCardConnection);
+
+    return this;
+  }
+
+  public renderConnection = (hookInstance) => {
+    this.connections.get(hookInstance.el.dataset.edgeId).render();
+
     return this;
   }
 
   private handleConnectorDragStart = (cardId: string, event: MouseEvent): void => {
     event.stopPropagation();
     console.log('browser:board:card-connector:mousedown');
+
     this.draggedConnection.fromId = cardId;
     this.element.addEventListener('mousemove', this.handleConnectorDrag);
     this.element.addEventListener('mouseup', this.handleConnectorDragEnd);
-
   };
 
   private handleConnectorDrag = (event: MouseEvent): void => {
     console.log('browser:board:card-connector:mousemove');
 
     const originatingCard = this.cards.find(card => card.id === this.draggedConnection.fromId);
-    const { x: startX, y: startY } = originatingCard.getConnectorCoordinates();
     const targetedCard = this.cards.find(card => card.containsEventTarget(event));
 
+    const { x: startX, y: startY } = originatingCard.getConnectorCoordinates();
     const { x: endX, y: endY } = targetedCard ? targetedCard.getConnectorCoordinates() : { x: event.offsetX, y: event.offsetY };
 
     document.querySelector("#unconnected-connector path").setAttribute('d', `m${startX},${startY} q90,40 ${endX - startX},${endY - startY}`);
@@ -87,7 +98,6 @@ export default class Board {
     document.querySelector("#unconnected-connector path")?.classList.add('hidden');
   };
 
-
   private handleDragStart = (event: MouseEvent): void => {
     console.log('browser:board:mousedown');
 
@@ -102,11 +112,11 @@ export default class Board {
   }
 
   private handleClick = (event: MouseEvent): void => {
-    if (event.target.id !== "board") { return };
+    if (event.target.id !== "board") return;
+
     console.log('browser:board:mouseup');
     console.log('phx:board:user-clicked-board');
 
-    // TODO: (@blakedietz) - once a card is created add it to the board may want to do this from the card hook instead
     this.pushEvent('user-clicked-board', { data: { y: event.offsetY, x: event.offsetX } });
   };
 
@@ -115,16 +125,16 @@ export default class Board {
 
     document.addEventListener('mousemove', this.handleCardDrag);
     document.addEventListener('mouseup', this.handleCardDragEnd, { once: true });
-    // Stop any interaction for mouse events
-
   }
 
   private handleCardDrag = (event: MouseEvent): void => {
     console.log('browser:board:mousemove');
     this.draggedCards.forEach((card) => {
-      // TODO: (@blakedietz) - set card connection positions
       card.drag(event);
-    })
+    });
+    this.connections.forEach((connection) => {
+      connection.render();
+    });
 
     this.mouseMoveTriggered = true;
   };
@@ -133,15 +143,14 @@ export default class Board {
     console.log('browser:board:mouseup');
     const targetedCard = this.findTargetedCard(this.cards, event);
 
-    // TODO: (@blakedietz) - pretty sure I could check the target here 
-    if (targetedCard) {
+    if (targetedCard && this.mouseMoveTriggered) {
       console.log('phx:board:card-drag-end');
       // TODO: (@blakedietz) - fix this to send out data for all moved cards
       this.pushEvent('card-drag-end', { data: { ...targetedCard.getCoordinates(), id: targetedCard.id } });
     }
     else {
       console.log('phx:board:card-clicked');
-      this.pushEvent('card-clicked', { data: { id: this?.element?.dataset?.cardId } });
+      this.pushEvent('card-clicked', { data: { id: targetedCard.id } });
     }
 
     document.removeEventListener('mousemove', this.handleCardDrag);
