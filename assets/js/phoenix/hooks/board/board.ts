@@ -97,7 +97,6 @@ export default class Board {
       });
     }
     else {
-      // TODO: (@blakedietz) - implement this server side
       this.pushEvent('create-card-with-connection', { data: { previous_node_id: this.draggedConnection.fromId, y: event.offsetY, x: event.offsetX } });
     }
     event.stopImmediatePropagation();
