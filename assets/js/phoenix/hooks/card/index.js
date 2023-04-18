@@ -4,6 +4,10 @@ const CardHook = {
   mounted() {
     getBoard()
       .addCard(this);
+  },
+  updated() {
+    getBoard()
+      .cardUpdated();
   }
 };
 

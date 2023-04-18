@@ -42,6 +42,17 @@ export default class Board {
     return this;
   }
 
+  public cardUpdated = () => {
+    console.log('example');
+
+    this.connections.forEach((connection) => {
+      connection.render();
+    });
+
+    return this;
+  }
+
+
   public addConnection = (hookInstance) => {
     const newCardConnection = new CardConnector(hookInstance)
     this.connections.set(newCardConnection.id, newCardConnection);

@@ -123,7 +123,6 @@ defmodule AppWeb.BoardLive.Show do
     {:noreply, socket}
   end
 
-  @impl Phoenix.LiveView
   def handle_event("create-card-with-connection", %{"data" => data}, socket) do
     # TODO: @blakedietz 2023-04-17 - implement
 
