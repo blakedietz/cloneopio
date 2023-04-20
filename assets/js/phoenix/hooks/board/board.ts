@@ -168,7 +168,7 @@ export default class Board {
               actions: ['draggingConnection']
             },
             MOUSE_UP_ON_BOARD: {
-              target: 'viewing',
+              target: 'cardEditorOpen',
               actions: ['dropConnectionOnBoard', 'hideTemporaryConnection']
             },
             MOUSE_UP_ON_CARD: {
@@ -179,6 +179,7 @@ export default class Board {
         },
         cardEditorOpen: {
           exit: ['hideEditor'],
+          entry: ['showEditor'],
           on: {
             MOUSE_UP_ON_BOARD: 'viewing',
             MOUSE_UP_ON_CARD: 'viewing',
@@ -222,13 +223,16 @@ export default class Board {
             this.draggedConnection.fromId = null;
           },
           dropConnectionOnBoard: (context, { cardId }) => {
-            this.pushEvent('create-card-with-connection', { data: { previous_node_id: this.draggedConnection.fromId, y: event.offsetY, x: event.offsetX } });
+            this.pushEvent('create-card-with-connection', { data: { previous_node_id: context.connectionDraggedFromCard.id, y: event.offsetY, x: event.offsetX } });
           },
           hideTemporaryConnection: (context, _) => {
             document.querySelector("#unconnected-connector path")?.classList.add('hidden');
           },
           hideEditor: () => {
             document.querySelector('#card-edit-modal')?.classList.add('hidden');
+          },
+          showEditor: () => {
+            document.querySelector('#card-edit-modal')?.classList.remove('hidden');
           },
           setConnectionDraggedFromCard: assign({
             connectionDraggedFromCard: (context, { card }) => {
