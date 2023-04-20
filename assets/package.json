@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@xstate/inspect": "^0.8.0"
+  }
+}

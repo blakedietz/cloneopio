@@ -22,6 +22,15 @@ import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 import hooks from "./phoenix/hooks"
+//
+// # TODO: @blakedietz 2023-04-20 - determine if in dev mode and only run in that scenario
+import { inspect } from '@xstate/inspect';
+
+inspect({
+  // options
+  // url: 'https://stately.ai/viz?inspect', // (default)
+  iframe: false // open in new window
+});
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, { hooks, params: { _csrf_token: csrfToken } })

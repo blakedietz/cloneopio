@@ -1,31 +1,37 @@
 import Card from "../card/card";
 import CardConnector from "../card-connector/card-connector";
+import { createMachine, interpret } from "xstate";
 import { PhoenixLiveViewPushEventHandler } from "../card/card";
 
 export default class Board {
-  private mouseMoveTriggered: boolean = false;
 
   private cards: Array<Card> = [];
   private connections: Map<string, CardConnector> = new Map();
   private draggedCards: Array<Card> = [];
   private draggedConnection: { fromId: string | null, toId: string | null } = { fromId: null, toId: null };
   private hookInstance;
+  private boardService;
 
   get pushEvent(): PhoenixLiveViewPushEventHandler {
-    return this.hookInstance.bind(this.hookInstance);
+    return this.hookInstance.pushEvent.bind(this.hookInstance);
+  }
+
+  get element() {
+    return this.hookInstance.el;
   }
 
   public setHookInstance = (hookInstance) => {
     this.hookInstance = hookInstance;
-    // this.element.addEventListener('mouseup', this.handleClick);
+    this.makeMachine();
 
     return this;
-  }
+  };
 
   public addCard = (hookInstance) => {
     const newCard = new Card(hookInstance)
       .addMouseDownHandlerToConnector(this.handleConnectorDragStart)
-      .addMouseDownHandler(this.handleCardDragStart);
+      .addMouseDownHandler(this.handleCardMouseDown)
+      .addMouseUpHandler(this.handleCardMouseUp);
 
     this.cards.push(newCard);
 
@@ -33,141 +39,194 @@ export default class Board {
   }
 
   public cardUpdated = () => {
-    console.log('example');
-
     this.connections.forEach((connection) => {
       connection.render();
     });
 
     return this;
-  }
+  };
 
   public addConnection = (hookInstance) => {
     const newCardConnection = new CardConnector(hookInstance)
     this.connections.set(newCardConnection.id, newCardConnection);
 
     return this;
-  }
+  };
 
   public renderConnection = (hookInstance) => {
     // TODO: (@blakedietz) - fix this api so you don't need to know the details of dataset
     this.connections.get(hookInstance.el.dataset.edgeId).render();
 
     return this;
+  };
+
+  private handleMouseDown = (event: MouseEvent) => {
+    this.boardService.send({ type: 'MOUSE_DOWN_ON_BOARD', event });
+  };
+
+  private handleMouseUp = (event: MouseEvent) => {
+    this.boardService.send({ type: 'MOUSE_UP_ON_BOARD', event });
+  };
+
+  private handleMouseMove = (event: MouseEvent) => {
+    this.boardService.send({ type: 'MOUSE_MOVE', event });
+  };
+
+  private handleCardMouseDown = (card, event: MouseEvent): void => {
+    // TODO: (@blakedietz) - move this out into the machine context
+    this.draggedCards.push(card);
+    this.boardService.send({ type: 'MOUSE_DOWN_ON_CARD', cardId: card.id });
   }
 
-  private get element() {
-    return this.hookInstance.el;
+  private handleCardMouseUp = (card, event: MouseEvent): void => {
+    // TODO: (@blakedietz) - move this out into the machine context
+    this.draggedCards = [];
+    this.boardService.send({ type: 'MOUSE_UP_ON_CARD', cardId: card.id });
   }
 
   private handleConnectorDragStart = (cardId: string, event: MouseEvent): void => {
-    // event.stopPropagation();
-    console.log('browser:board:card-connector:mousedown');
+    this.boardService.send({ type: 'MOUSE_DOWN_ON_CARD_CONNECTOR', cardId });
 
     this.draggedConnection.fromId = cardId;
-    // this.element.addEventListener('mousemove', this.handleConnectorDrag);
-    // this.element.addEventListener('mouseup', this.handleConnectorDragEnd);
-    // this.element.removeEventListener('mouseup', this.handleClick);
   };
 
-  private handleConnectorDrag = (event: MouseEvent): void => {
-    console.log('browser:board:card-connector:mousemove');
+  private makeMachine() {
+    const boardMachine = createMachine({
+      predictableActionArguments: true,
+      id: 'board',
+      initial: 'viewing',
+      states: {
+        viewing: {
+          on: {
+            MOUSE_DOWN_ON_BOARD: 'mouseDownOnBoard',
+            MOUSE_DOWN_ON_CARD: 'mouseDownOnCard',
+            MOUSE_DOWN_ON_CARD_CONNECTOR: 'mouseDownOnCardConnection',
+          }
+        },
+        mouseDownOnBoard: {
+          on: {
+            MOUSE_MOVE: 'draggingSelection',
+            MOUSE_UP_ON_BOARD: {
+              target: 'cardEditorOpen',
+              actions: ['createCard']
+            },
+            MOUSE_UP_ON_CARD: 'cardEditorOpen',
+          }
+        },
+        draggingSelection: {
+          on: {
+            MOUSE_OVER_CARD: 'draggingSelectionWithMultipleCards',
+          }
+        },
+        draggingSelectionWithMultipleCards: {
+          on: {
+            MOUSE_UP: 'viewingMultipleCardsSelected',
+          }
+        },
+        viewingMultipleCardsSelected: {
+          on: {
+            MOUSE_UP_ON_BOARD: 'viewing',
+          }
+        },
+        mouseDownOnCard: {
+          on: {
+            MOUSE_MOVE: 'draggingCard',
+            MOUSE_UP_ON_CARD: {
+              target: 'cardEditorOpen',
+              actions: ['clickCard']
+            },
+          }
+        },
+        draggingCard: {
+          on: {
+            MOUSE_MOVE: {
+              target: 'draggingCard',
+              actions: ['dragCard']
+            },
+            MOUSE_UP_ON_BOARD: {
+              target: 'viewing',
+              actions: ['dropCard']
+            },
+          },
+        },
+        mouseDownOnCardConnection: {
+          on: {
+            MOUSE_MOVE: 'draggingConnection'
+          }
+        },
+        draggingConnection: {
+          on: {
+            MOUSE_MOVE: {
+              target: 'draggingConnection',
+              actions: ['draggingConnection']
+            },
+            MOUSE_UP_ON_BOARD: {
+              target: 'viewing',
+              actions: ['createCard', 'hideTemporaryConnection']
+            },
+            MOUSE_UP_ON_CARD: {
+              target: 'cardEditorOpen',
+              actions: ['dropConnectionOnCard', 'hideTemporaryConnection']
+            },
+          }
+        },
+        cardEditorOpen: {
+          on: {
+            MOUSE_UP_ON_BOARD: 'viewing',
+            MOUSE_UP_ON_CARD: 'viewing',
+          }
+        },
+        todo: {}
+      },
+    },
+      {
+        actions: {
+          createCard: (context, { event }) => {
+            this.pushEvent('user-clicked-board', { data: { y: event.offsetY, x: event.offsetX } });
+          },
+          dragCard: (context, { event }) => {
+            this.draggedCards.forEach((card) => {
+              card.drag(event);
+            });
+            this.connections.forEach((connection) => {
+              connection.render();
+            });
+          },
+          dropCard: (context, event) => {
+            this.draggedCards.forEach(card => {
+              this.pushEvent('card-drag-end', { data: { ...card.getCoordinates(), id: card.id } });
+            });
+            this.draggedCards = [];
+          },
+          clickCard: (context, { cardId: id }) => {
+            this.pushEvent('card-clicked', { data: { id } });
+          },
+          draggingConnection: (context, { event }) => {
+            const originatingCard = this.cards.find(card => card.id === this.draggedConnection.fromId);
+            const targetedCard = this.cards.find(card => card.containsEventTarget(event));
 
-    const originatingCard = this.cards.find(card => card.id === this.draggedConnection.fromId);
-    const targetedCard = this.cards.find(card => card.containsEventTarget(event));
+            const { x: startX, y: startY } = originatingCard.getConnectorCoordinates();
+            const { x: endX, y: endY } = targetedCard ? targetedCard.getConnectorCoordinates() : { x: event.offsetX, y: event.offsetY };
 
-    const { x: startX, y: startY } = originatingCard.getConnectorCoordinates();
-    const { x: endX, y: endY } = targetedCard ? targetedCard.getConnectorCoordinates() : { x: event.offsetX, y: event.offsetY };
-
-    document.querySelector("#unconnected-connector path").setAttribute('d', `m${startX},${startY} q90,40 ${endX - startX},${endY - startY}`);
-    document.querySelector("#unconnected-connector path")?.classList.remove('hidden');
-
-    this.mouseMoveTriggered = true;
-  };
-
-  private handleConnectorDragEnd = (event: MouseEvent): void => {
-    const targetedCard = this.cards.find(cardElement => cardElement.containsEventTarget(event));
-
-    if (targetedCard) {
-      // TODO: (@blakedietz) - check if already dragged over existing card that's connected
-      this.pushEvent('card-connected', { data: { previous_node_id: this.draggedConnection.fromId, next_node_id: targetedCard.id } }, (reply, ref) => {
-        console.log({ reply, ref });
+            document.querySelector("#unconnected-connector path").setAttribute('d', `m${startX},${startY} q90,40 ${endX - startX},${endY - startY}`);
+            document.querySelector("#unconnected-connector path")?.classList.remove('hidden');
+          },
+          dropConnectionOnCard: (context, { cardId }) => {
+            this.pushEvent('card-connected', { data: { previous_node_id: this.draggedConnection.fromId, next_node_id: cardId } });
+            this.draggedConnection.fromId = null;
+          },
+          hideTemporaryConnection: (context, _) => {
+            document.querySelector("#unconnected-connector path")?.classList.add('hidden');
+          }
+        }
       });
-    }
-    else {
-      this.pushEvent('create-card-with-connection', { data: { previous_node_id: this.draggedConnection.fromId, y: event.offsetY, x: event.offsetX } });
-    }
-    // event.stopImmediatePropagation();
-    // this.element.removeEventListener('mousemove', this.handleConnectorDrag);
-    // this.element.removeEventListener('mouseup', this.handleConnectorDragEnd);
-    // this.element.addEventListener('mouseup', this.handleClick);
-    document.querySelector("#unconnected-connector path")?.classList.add('hidden');
-  };
 
-  private handleDragStart = (cardId, event: MouseEvent): void => {
-    console.log('browser:board:mousedown');
+    const boardService = interpret(boardMachine, { devTools: true }).onTransition(state => console.log(state.value));
+    boardService.start();
 
-    this.draggedCards.push(card);
-    this.handleCardDragStart(card, event);
+    this.boardService = boardService;
+    this.element.addEventListener('mousedown', this.handleMouseDown);
+    this.element.addEventListener('mouseup', this.handleMouseUp);
+    this.element.addEventListener('mousemove', this.handleMouseMove);
   }
-
-  private handleClick = (event: MouseEvent): void => {
-    if (event.target.id !== "board") return;
-
-    console.log('browser:board:mouseup');
-    console.log('phx:board:user-clicked-board');
-
-    this.pushEvent('user-clicked-board', { data: { y: event.offsetY, x: event.offsetX } });
-  };
-
-  private handleCardDragStart = (cardId, event: MouseEvent): void => {
-    console.log('browser:board:mousedown');
-
-    // document.addEventListener('mousemove', this.handleCardDrag);
-    // document.addEventListener('mouseup', this.handleCardDragEnd, { once: true });
-  }
-
-  private handleCardDrag = (event: MouseEvent): void => {
-    console.log('browser:board:mousemove');
-    this.draggedCards.forEach((card) => {
-      card.drag(event);
-    });
-    this.connections.forEach((connection) => {
-      connection.render();
-    });
-
-    this.mouseMoveTriggered = true;
-  };
-
-  private handleCardDragEnd = (event: MouseEvent): void => {
-    console.log('browser:board:mouseup');
-    const targetedCard = this.findTargetedCard(this.cards, event);
-
-    if (targetedCard && this.mouseMoveTriggered) {
-      console.log('phx:board:card-drag-end');
-      // TODO: (@blakedietz) - fix this to send out data for all moved cards
-      this.pushEvent('card-drag-end', { data: { ...targetedCard.getCoordinates(), id: targetedCard.id } });
-    }
-    else {
-      console.log('phx:board:card-clicked');
-      this.pushEvent('card-clicked', { data: { id: targetedCard.id } });
-    }
-
-    document.removeEventListener('mousemove', this.handleCardDrag);
-
-    this.mouseMoveTriggered = false;
-    this.draggedCards = [];
-  };
-
-  private findTargetedCard(cards: [Card], event: MouseEvent): Card | undefined {
-    const result = cards.find((card) => {
-      if (event.target) {
-        // @ts-ignore
-        return card.containsEventTarget(event);
-      }
-      return false;
-    });
-
-    return result;
-  };
 };
