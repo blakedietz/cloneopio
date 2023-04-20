@@ -20,10 +20,18 @@ export default class Card {
     return { y: element?.offsetTop, x: element?.offsetLeft };
   }
 
-  public addMouseMoveHandlerToConnector(handler) {
+  public addMouseDownHandlerToConnector(handler) {
     this.hookInstance.el
       ?.querySelector('.card-connector')
       ?.addEventListener('mousedown', (event) => handler(this.id, event));
+
+    return this;
+  }
+
+  public addMouseDownHandler(handler) {
+    this.element.addEventListener('mousedown', (event) => {
+      handler(this, event);
+    });
 
     return this;
   }
@@ -45,4 +53,9 @@ export default class Card {
   get id() {
     return this.hookInstance.el.dataset.cardId;
   }
+
+  get element() {
+    return this.hookInstance.el;
+  }
+
 }

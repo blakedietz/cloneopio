@@ -1,37 +1,32 @@
 import Card from "../card/card";
 import CardConnector from "../card-connector/card-connector";
-
 import { PhoenixLiveViewPushEventHandler } from "../card/card";
-
-type BoardState = 'board-being-viewd' | 'edit-modal-opened' | 'card-being-dragged' | 'connection-being-dragged';
 
 export default class Board {
   private mouseMoveTriggered: boolean = false;
-  private element: HTMLElement;
-  private pushEvent: PhoenixLiveViewPushEventHandler;
 
   private cards: Array<Card> = [];
   private connections: Map<string, CardConnector> = new Map();
   private draggedCards: Array<Card> = [];
   private draggedConnection: { fromId: string | null, toId: string | null } = { fromId: null, toId: null };
+  private hookInstance;
 
-
-  public setElement = (element: HTMLElement) => {
-    this.element = element;
-    this.element.addEventListener('mousedown', this.handleDragStart);
-    this.element.addEventListener('mouseup', this.handleClick);
-
-    return this;
+  get pushEvent(): PhoenixLiveViewPushEventHandler {
+    return this.hookInstance.bind(this.hookInstance);
   }
 
-  public setPushEvent = (pushEvent: PhoenixLiveViewPushEventHandler) => {
-    this.pushEvent = pushEvent;
+  public setHookInstance = (hookInstance) => {
+    this.hookInstance = hookInstance;
+    // this.element.addEventListener('mouseup', this.handleClick);
 
     return this;
   }
 
   public addCard = (hookInstance) => {
-    const newCard = new Card(hookInstance).addMouseMoveHandlerToConnector(this.handleConnectorDragStart);
+    const newCard = new Card(hookInstance)
+      .addMouseDownHandlerToConnector(this.handleConnectorDragStart)
+      .addMouseDownHandler(this.handleCardDragStart);
+
     this.cards.push(newCard);
 
     return this;
@@ -47,7 +42,6 @@ export default class Board {
     return this;
   }
 
-
   public addConnection = (hookInstance) => {
     const newCardConnection = new CardConnector(hookInstance)
     this.connections.set(newCardConnection.id, newCardConnection);
@@ -62,14 +56,18 @@ export default class Board {
     return this;
   }
 
+  private get element() {
+    return this.hookInstance.el;
+  }
+
   private handleConnectorDragStart = (cardId: string, event: MouseEvent): void => {
-    event.stopPropagation();
+    // event.stopPropagation();
     console.log('browser:board:card-connector:mousedown');
 
     this.draggedConnection.fromId = cardId;
-    this.element.addEventListener('mousemove', this.handleConnectorDrag);
-    this.element.addEventListener('mouseup', this.handleConnectorDragEnd);
-    this.element.removeEventListener('mouseup', this.handleClick);
+    // this.element.addEventListener('mousemove', this.handleConnectorDrag);
+    // this.element.addEventListener('mouseup', this.handleConnectorDragEnd);
+    // this.element.removeEventListener('mouseup', this.handleClick);
   };
 
   private handleConnectorDrag = (event: MouseEvent): void => {
@@ -99,24 +97,18 @@ export default class Board {
     else {
       this.pushEvent('create-card-with-connection', { data: { previous_node_id: this.draggedConnection.fromId, y: event.offsetY, x: event.offsetX } });
     }
-    event.stopImmediatePropagation();
-    this.element.removeEventListener('mousemove', this.handleConnectorDrag);
-    this.element.removeEventListener('mouseup', this.handleConnectorDragEnd);
-    this.element.addEventListener('mouseup', this.handleClick);
+    // event.stopImmediatePropagation();
+    // this.element.removeEventListener('mousemove', this.handleConnectorDrag);
+    // this.element.removeEventListener('mouseup', this.handleConnectorDragEnd);
+    // this.element.addEventListener('mouseup', this.handleClick);
     document.querySelector("#unconnected-connector path")?.classList.add('hidden');
   };
 
-  private handleDragStart = (event: MouseEvent): void => {
+  private handleDragStart = (cardId, event: MouseEvent): void => {
     console.log('browser:board:mousedown');
 
-    // @ts-ignore
-    const targetedCard = this.findTargetedCard(this.cards, event);
-
-    if (targetedCard) {
-      // @ts-ignore
-      this.draggedCards.push(targetedCard);
-      this.handleCardDragStart(event);
-    }
+    this.draggedCards.push(card);
+    this.handleCardDragStart(card, event);
   }
 
   private handleClick = (event: MouseEvent): void => {
@@ -128,11 +120,11 @@ export default class Board {
     this.pushEvent('user-clicked-board', { data: { y: event.offsetY, x: event.offsetX } });
   };
 
-  private handleCardDragStart = (event: MouseEvent): void => {
+  private handleCardDragStart = (cardId, event: MouseEvent): void => {
     console.log('browser:board:mousedown');
 
-    document.addEventListener('mousemove', this.handleCardDrag);
-    document.addEventListener('mouseup', this.handleCardDragEnd, { once: true });
+    // document.addEventListener('mousemove', this.handleCardDrag);
+    // document.addEventListener('mouseup', this.handleCardDragEnd, { once: true });
   }
 
   private handleCardDrag = (event: MouseEvent): void => {
