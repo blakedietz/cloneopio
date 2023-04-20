@@ -176,7 +176,6 @@ export default class Board {
             MOUSE_UP_ON_CARD: 'viewing',
           }
         },
-        todo: {}
       },
     },
       {
