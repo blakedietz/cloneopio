@@ -1,13 +1,12 @@
 import Card from "../card/card";
 import CardConnector from "../card-connector/card-connector";
-import { createMachine, interpret } from "xstate";
+import { createMachine, interpret, assign } from "xstate";
 import { PhoenixLiveViewPushEventHandler } from "../card/card";
 
 export default class Board {
 
   private cards: Array<Card> = [];
   private connections: Map<string, CardConnector> = new Map();
-  private draggedCards: Array<Card> = [];
   private draggedConnection: { fromId: string | null, toId: string | null } = { fromId: null, toId: null };
   private hookInstance;
   private boardService;
@@ -74,14 +73,12 @@ export default class Board {
 
   private handleCardMouseDown = (card, event: MouseEvent): void => {
     // TODO: (@blakedietz) - move this out into the machine context
-    this.draggedCards.push(card);
-    this.boardService.send({ type: 'MOUSE_DOWN_ON_CARD', cardId: card.id });
+    this.boardService.send({ type: 'MOUSE_DOWN_ON_CARD', card });
   }
 
   private handleCardMouseUp = (card, event: MouseEvent): void => {
     // TODO: (@blakedietz) - move this out into the machine context
-    this.draggedCards = [];
-    this.boardService.send({ type: 'MOUSE_UP_ON_CARD', cardId: card.id });
+    this.boardService.send({ type: 'MOUSE_UP_ON_CARD', card });
   }
 
   private handleConnectorDragStart = (cardId: string, event: MouseEvent): void => {
@@ -95,6 +92,11 @@ export default class Board {
       predictableActionArguments: true,
       id: 'board',
       initial: 'viewing',
+      context: {
+        cards: new Map(),
+        selectedCards: new Map(),
+        connectionDraggedFromCardId: null
+      },
       states: {
         viewing: {
           on: {
@@ -134,9 +136,10 @@ export default class Board {
             MOUSE_MOVE: 'draggingCard',
             MOUSE_UP_ON_CARD: {
               target: 'cardEditorOpen',
-              actions: ['clickCard']
+              actions: ['clickCard', 'removeAllSelectedCards']
             },
-          }
+          },
+          entry: ['addCardToSelectedCards']
         },
         draggingCard: {
           on: {
@@ -146,7 +149,7 @@ export default class Board {
             },
             MOUSE_UP_ON_BOARD: {
               target: 'viewing',
-              actions: ['dropCard']
+              actions: ['dropCard', 'removeAllSelectedCards']
             },
           },
         },
@@ -186,7 +189,7 @@ export default class Board {
             this.pushEvent('user-clicked-board', { data: { y: event.offsetY, x: event.offsetX } });
           },
           dragCard: (context, { event }) => {
-            this.draggedCards.forEach((card) => {
+            context.selectedCards.forEach((card) => {
               card.drag(event);
             });
             this.connections.forEach((connection) => {
@@ -194,10 +197,9 @@ export default class Board {
             });
           },
           dropCard: (context, event) => {
-            this.draggedCards.forEach(card => {
+            context.selectedCards.forEach(card => {
               this.pushEvent('card-drag-end', { data: { ...card.getCoordinates(), id: card.id } });
             });
-            this.draggedCards = [];
           },
           clickCard: (context, { cardId: id }) => {
             this.pushEvent('card-clicked', { data: { id } });
@@ -212,8 +214,8 @@ export default class Board {
             document.querySelector("#unconnected-connector path").setAttribute('d', `m${startX},${startY} q90,40 ${endX - startX},${endY - startY}`);
             document.querySelector("#unconnected-connector path")?.classList.remove('hidden');
           },
-          dropConnectionOnCard: (context, { cardId }) => {
-            this.pushEvent('card-connected', { data: { previous_node_id: this.draggedConnection.fromId, next_node_id: cardId } });
+          dropConnectionOnCard: (context, { card }) => {
+            this.pushEvent('card-connected', { data: { previous_node_id: this.draggedConnection.fromId, next_node_id: card.id } });
             this.draggedConnection.fromId = null;
           },
           dropConnectionOnBoard: (context, { cardId }) => {
@@ -224,7 +226,19 @@ export default class Board {
           },
           hideEditor: () => {
             document.querySelector('#card-edit-modal')?.classList.add('hidden');
-          }
+          },
+          addCardToSelectedCards: assign({
+            selectedCards: (context, { card }) => {
+              // TODO: (@blakedietz) - this is impure, need to look at smart ways to do this
+              context.selectedCards.set(card.id, card)
+              return context.selectedCards;
+            }
+          }),
+          removeAllSelectedCards: assign({
+            selectedCards: (context, { card }) => {
+              return new Map();
+            }
+          }),
         }
       });
 
