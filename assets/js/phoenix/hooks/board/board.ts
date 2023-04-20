@@ -120,7 +120,8 @@ export default class Board {
         },
         draggingSelectionWithMultipleCards: {
           on: {
-            MOUSE_UP: 'viewingMultipleCardsSelected',
+            MOUSE_UP_ON_BOARD: 'viewingMultipleCardsSelected',
+            MOUSE_UP_ON_CARD: 'viewingMultipleCardsSelected',
           }
         },
         viewingMultipleCardsSelected: {
