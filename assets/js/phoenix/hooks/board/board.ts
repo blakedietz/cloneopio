@@ -121,7 +121,7 @@ export default class Board {
         draggingSelectionWithMultipleCards: {
           on: {
             MOUSE_UP_ON_BOARD: 'viewingMultipleCardsSelected',
-            MOUSE_UP_ON_CARD: 'viewingMultipleCardsSelected',
+            MOUSE_UP_ON_CARD: '',
           }
         },
         viewingMultipleCardsSelected: {
@@ -163,7 +163,7 @@ export default class Board {
             },
             MOUSE_UP_ON_BOARD: {
               target: 'viewing',
-              actions: ['createCard', 'hideTemporaryConnection']
+              actions: ['dropConnectionOnBoard', 'hideTemporaryConnection']
             },
             MOUSE_UP_ON_CARD: {
               target: 'cardEditorOpen',
@@ -172,6 +172,7 @@ export default class Board {
           }
         },
         cardEditorOpen: {
+          exit: ['hideEditor'],
           on: {
             MOUSE_UP_ON_BOARD: 'viewing',
             MOUSE_UP_ON_CARD: 'viewing',
@@ -215,8 +216,14 @@ export default class Board {
             this.pushEvent('card-connected', { data: { previous_node_id: this.draggedConnection.fromId, next_node_id: cardId } });
             this.draggedConnection.fromId = null;
           },
+          dropConnectionOnBoard: (context, { cardId }) => {
+            this.pushEvent('create-card-with-connection', { data: { previous_node_id: this.draggedConnection.fromId, y: event.offsetY, x: event.offsetX } });
+          },
           hideTemporaryConnection: (context, _) => {
             document.querySelector("#unconnected-connector path")?.classList.add('hidden');
+          },
+          hideEditor: () => {
+            document.querySelector('#card-edit-modal')?.classList.add('hidden');
           }
         }
       });
