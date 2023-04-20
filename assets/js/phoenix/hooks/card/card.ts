@@ -23,7 +23,7 @@ export default class Card {
   public addMouseDownHandlerToConnector(handler) {
     this.hookInstance.el
       ?.querySelector('.card-connector')
-      ?.addEventListener('mousedown', (event) => handler(this.id, event));
+      ?.addEventListener('mousedown', (event) => handler(this, event));
 
     return this;
   }
