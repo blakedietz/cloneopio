@@ -44,6 +44,14 @@ export default class Card {
     return this;
   }
 
+  public addMouseOverHandler(handler) {
+    this.element.addEventListener('mouseover', (event) => {
+      handler(this, event);
+    });
+
+    return this;
+  }
+
   public getConnectorCoordinates() {
     const cardElement = this.hookInstance.el;
     const cardConnectorElement = cardElement.querySelector('.card-connector');

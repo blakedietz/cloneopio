@@ -29,7 +29,8 @@ export default class Board {
     const newCard = new Card(hookInstance)
       .addMouseDownHandlerToConnector(this.handleConnectorDragStart)
       .addMouseDownHandler(this.handleCardMouseDown)
-      .addMouseUpHandler(this.handleCardMouseUp);
+      .addMouseUpHandler(this.handleCardMouseUp)
+      .addMouseOverHandler(this.handleCardMouseOver);
 
     this.cards.push(newCard);
 
@@ -82,6 +83,11 @@ export default class Board {
     // TODO: (@blakedietz) - move this out into the machine context
     this.boardService.send({ type: 'MOUSE_UP_ON_CARD', card });
   }
+  private handleCardMouseOver = (card, event: MouseEvent): void => {
+    event.stopPropagation();
+    // TODO: (@blakedietz) - move this out into the machine context
+    this.boardService.send({ type: 'MOUSE_OVER_CARD', card });
+  }
 
   private handleConnectorDragStart = (card, event: MouseEvent): void => {
     event.stopPropagation();
@@ -111,6 +117,13 @@ export default class Board {
         },
         mouseDownOnBoard: {
           on: {
+            MOUSE_MOVE: {
+
+            },
+            MOUSE_OVER_CARD: {
+              target: 'selectingMultipleCards',
+              actions: ['addCardToSelectedCards']
+            },
             MOUSE_UP_ON_BOARD: {
               target: 'cardEditorOpen',
               actions: ['createCard']
@@ -118,15 +131,19 @@ export default class Board {
             MOUSE_UP_ON_CARD: 'cardEditorOpen',
           }
         },
-        draggingSelectionWithMultipleCards: {
+        selectingMultipleCards: {
           on: {
+            MOUSE_OVER_CARD: {
+              target: 'selectingMultipleCards',
+              actions: ['addCardToSelectedCards']
+            },
             MOUSE_UP_ON_BOARD: 'viewingMultipleCardsSelected',
-            MOUSE_UP_ON_CARD: '',
+            MOUSE_UP_ON_CARD: 'viewingMultipleCardsSelected',
           }
         },
         viewingMultipleCardsSelected: {
           on: {
-            MOUSE_UP_ON_BOARD: 'viewing',
+            MOUSE_DOWN_ON_CARD: 'draggingCard'
           }
         },
         mouseDownOnCard: {
@@ -143,6 +160,7 @@ export default class Board {
           on: {
             MOUSE_MOVE: {
               target: 'draggingCard',
+              // TODO: (@blakedietz) - figure out a nice way to disable all cursor events in order to reduce the number of calls
               actions: ['dragCard']
             },
             MOUSE_UP_ON_BOARD: {
@@ -194,12 +212,14 @@ export default class Board {
             this.pushEvent('user-clicked-board', { data: { y: event.offsetY, x: event.offsetX } });
           },
           dragCard: (context, { event }) => {
+            [...document.querySelectorAll('.card')].forEach(element => element.style.pointerEvents = 'none');
             context.selectedCards.forEach((card) => {
               card.drag(event);
             });
             this.connections.forEach((connection) => {
               connection.render();
             });
+            [...document.querySelectorAll('.card')].forEach(element => element.style.pointerEvents = 'auto');
           },
           dropCard: (context, event) => {
             context.selectedCards.forEach(card => {
