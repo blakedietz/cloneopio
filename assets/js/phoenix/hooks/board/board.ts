@@ -7,7 +7,6 @@ export default class Board {
 
   private cards: Array<Card> = [];
   private connections: Map<string, CardConnector> = new Map();
-  private draggedConnection: { fromId: string | null, toId: string | null } = { fromId: null, toId: null };
   private hookInstance;
   private boardService;
 
@@ -73,15 +72,19 @@ export default class Board {
 
   private handleCardMouseDown = (card, event: MouseEvent): void => {
     // TODO: (@blakedietz) - move this out into the machine context
+    // event.stopPropagation();
+    console.log('card mouse down');
     this.boardService.send({ type: 'MOUSE_DOWN_ON_CARD', card });
   }
 
   private handleCardMouseUp = (card, event: MouseEvent): void => {
+    event.stopPropagation();
     // TODO: (@blakedietz) - move this out into the machine context
     this.boardService.send({ type: 'MOUSE_UP_ON_CARD', card });
   }
 
   private handleConnectorDragStart = (card, event: MouseEvent): void => {
+    event.stopPropagation();
     this.boardService.send({ type: 'MOUSE_DOWN_ON_CARD_CONNECTOR', card });
   };
 
@@ -108,17 +111,11 @@ export default class Board {
         },
         mouseDownOnBoard: {
           on: {
-            MOUSE_MOVE: 'draggingSelection',
             MOUSE_UP_ON_BOARD: {
               target: 'cardEditorOpen',
               actions: ['createCard']
             },
             MOUSE_UP_ON_CARD: 'cardEditorOpen',
-          }
-        },
-        draggingSelection: {
-          on: {
-            MOUSE_OVER_CARD: 'draggingSelectionWithMultipleCards',
           }
         },
         draggingSelectionWithMultipleCards: {
@@ -152,6 +149,10 @@ export default class Board {
               target: 'viewing',
               actions: ['dropCard', 'removeAllSelectedCards']
             },
+            MOUSE_UP_ON_CARD: {
+              target: 'viewing',
+              actions: ['dropCard', 'removeAllSelectedCards']
+            },
           },
         },
         mouseDownOnCardConnection: {
@@ -179,7 +180,7 @@ export default class Board {
         },
         cardEditorOpen: {
           exit: ['hideEditor'],
-          entry: ['showEditor'],
+          // entry: ['showEditor'],
           on: {
             MOUSE_UP_ON_BOARD: 'viewing',
             MOUSE_UP_ON_CARD: 'viewing',
@@ -205,7 +206,7 @@ export default class Board {
               this.pushEvent('card-drag-end', { data: { ...card.getCoordinates(), id: card.id } });
             });
           },
-          clickCard: (context, { cardId: id }) => {
+          clickCard: (context, { card: { id } }) => {
             this.pushEvent('card-clicked', { data: { id } });
           },
           draggingConnection: (context, { event }) => {
@@ -220,7 +221,6 @@ export default class Board {
           },
           dropConnectionOnCard: (context, { card }) => {
             this.pushEvent('card-connected', { data: { previous_node_id: context.connectionDraggedFromCard.id, next_node_id: card.id } });
-            this.draggedConnection.fromId = null;
           },
           dropConnectionOnBoard: (context, { cardId }) => {
             this.pushEvent('create-card-with-connection', { data: { previous_node_id: context.connectionDraggedFromCard.id, y: event.offsetY, x: event.offsetX } });
@@ -230,6 +230,7 @@ export default class Board {
           },
           hideEditor: () => {
             document.querySelector('#card-edit-modal')?.classList.add('hidden');
+            this.pushEvent('card-edit:click-away', {});
           },
           showEditor: () => {
             document.querySelector('#card-edit-modal')?.classList.remove('hidden');
