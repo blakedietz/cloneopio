@@ -212,14 +212,12 @@ export default class Board {
             this.pushEvent('user-clicked-board', { data: { y: event.offsetY, x: event.offsetX } });
           },
           dragCard: (context, { event }) => {
-            [...document.querySelectorAll('.card')].forEach(element => element.style.pointerEvents = 'none');
             context.selectedCards.forEach((card) => {
               card.drag(event);
             });
             this.connections.forEach((connection) => {
               connection.render();
             });
-            [...document.querySelectorAll('.card')].forEach(element => element.style.pointerEvents = 'auto');
           },
           dropCard: (context, event) => {
             context.selectedCards.forEach(card => {
