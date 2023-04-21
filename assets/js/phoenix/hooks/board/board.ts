@@ -160,7 +160,6 @@ export default class Board {
           on: {
             MOUSE_MOVE: {
               target: 'draggingCard',
-              // TODO: (@blakedietz) - figure out a nice way to disable all cursor events in order to reduce the number of calls
               actions: ['dragCard']
             },
             MOUSE_UP_ON_BOARD: {
