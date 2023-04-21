@@ -44,7 +44,7 @@ defmodule AppWeb.BoardLive.Components.CardEdit do
           "hidden"
 
         _ ->
-          "min-h-[30px] min-w-[90px] absolute bg-gray-500 rounded-md select-none"
+          "z-20 min-h-[30px] min-w-[90px] absolute bg-gray-500 rounded-md select-none"
       end)
 
     ~H"""
