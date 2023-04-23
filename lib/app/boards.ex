@@ -118,6 +118,38 @@ defmodule App.Boards do
     end)
   end
 
+  def delete_card_and_connections_multi!(card_id) do
+    card = Cards.get_card!(card_id)
+
+    edge_query =
+      from(e in Edge, where: e.previous_node_id == ^card_id or e.next_node_id == ^card_id)
+
+    edges = edge_query |> App.Repo.all()
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.delete_all(
+      :edges,
+      edge_query
+    )
+    |> Ecto.Multi.delete(:card, card)
+    |> Ecto.Multi.put(:board_id, card.board_id)
+    |> Ecto.Multi.put(:deleted_edges, edges)
+  end
+
+  def delete_card_and_connections!(card_id) do
+    card_id
+    |> delete_card_and_connections_multi!()
+    |> App.Repo.transaction()
+    |> case do
+      {:ok, %{deleted_edges: edges, card: card, board_id: board_id}} = result ->
+        broadcast!(board_id, %Events.CardDeleted{card: card, edges: edges})
+        result
+
+      error ->
+        error
+    end
+  end
+
   def create_card_with_connection(attrs) do
     attrs
     |> create_card_with_connection_multi()

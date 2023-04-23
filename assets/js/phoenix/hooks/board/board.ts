@@ -253,7 +253,7 @@ export default class Board {
           setAllCardsActive: (context) => {
             context.selectedCards.forEach(card => card.setActive())
           },
-          setAllCardsNotActive: () => {
+          setAllCardsNotActive: (context) => {
             context.selectedCards.forEach(card => card.setNotActive())
           },
           setConnectionDraggedFromCard: assign({

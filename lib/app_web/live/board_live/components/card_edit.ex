@@ -2,6 +2,7 @@ defmodule AppWeb.BoardLive.Components.CardEdit do
   use AppWeb, :live_component
 
   alias App.Cards
+  alias App.Boards
 
   @offset_px 10
 
@@ -44,7 +45,7 @@ defmodule AppWeb.BoardLive.Components.CardEdit do
           "hidden"
 
         _ ->
-          "z-20 min-h-[30px] min-w-[90px] absolute bg-gray-500 rounded-md select-none"
+          "z-20 min-h-[30px] min-w-[90px] absolute bg-zinc-400 rounded-md select-none p-1"
       end)
 
     ~H"""
@@ -65,6 +66,14 @@ defmodule AppWeb.BoardLive.Components.CardEdit do
             field={@form[:notes]}
           />
         </.form>
+        <button
+          phx-click="click-delete-card"
+          phx-target={@myself}
+          phx-value-card-id={@card_id}
+          class="bg-rose-500 hover:bg-rose-400 text-white font-bold py-2 px-4 border-b-2 border-r-2 border-rose-700 hover:border-rose-500 rounded m-1 active:border-opacity-0"
+        >
+          <.icon name="hero-trash" class="h-4 w-4" />
+        </button>
       </div>
     </div>
     """
@@ -73,6 +82,11 @@ defmodule AppWeb.BoardLive.Components.CardEdit do
   @impl Phoenix.LiveComponent
   def handle_event("card-edit:update", %{"card" => card}, socket) do
     Cards.update_card(socket.assigns.card, card)
+    {:noreply, socket}
+  end
+
+  def handle_event("click-delete-card", %{"card-id" => card_id}, socket) do
+    Boards.delete_card_and_connections!(card_id)
     {:noreply, socket}
   end
 end

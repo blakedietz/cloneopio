@@ -155,6 +155,15 @@ defmodule AppWeb.BoardLive.Show do
     {:noreply, socket |> stream_insert(:cards, card)}
   end
 
+  def handle_info({Boards, %Events.CardDeleted{card: card, edges: edges}}, socket) do
+    socket =
+      Enum.reduce(edges, socket, fn edge, socket ->
+        socket |> stream_delete(:edges, edge)
+      end)
+
+    {:noreply, socket |> stream_delete(:cards, card)}
+  end
+
   def handle_info({Boards, %Events.EdgeCreated{edge: edge}}, socket) do
     {:noreply, socket |> stream_insert(:edges, edge)}
   end
