@@ -20,10 +20,47 @@ export default class Card {
     return { y: element?.offsetTop, x: element?.offsetLeft };
   }
 
-  public addMouseMoveHandlerToConnector(handler) {
+  public setActive = () => {
+    this.element.classList.add('drop-shadow-[5px_5px_0px_rgba(0,0,0,0.25)]');
+    this.element.classList.add('animate-wiggle');
+
+    return this;
+  }
+
+  public setNotActive = () => {
+    this.element.classList.remove('drop-shadow-md');
+
+    return this;
+  }
+
+  public addMouseDownHandlerToConnector(handler) {
     this.hookInstance.el
       ?.querySelector('.card-connector')
-      ?.addEventListener('mousedown', (event) => handler(this.id, event));
+      ?.addEventListener('mousedown', (event) => handler(this, event));
+
+    return this;
+  }
+
+  public addMouseDownHandler(handler) {
+    this.element.addEventListener('mousedown', (event) => {
+      handler(this, event);
+    });
+
+    return this;
+  }
+
+  public addMouseUpHandler(handler) {
+    this.element.addEventListener('mouseup', (event) => {
+      handler(this, event);
+    });
+
+    return this;
+  }
+
+  public addMouseOverHandler(handler) {
+    this.element.addEventListener('mouseover', (event) => {
+      handler(this, event);
+    });
 
     return this;
   }
@@ -45,4 +82,9 @@ export default class Card {
   get id() {
     return this.hookInstance.el.dataset.cardId;
   }
+
+  get element() {
+    return this.hookInstance.el;
+  }
+
 }

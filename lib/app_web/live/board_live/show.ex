@@ -26,7 +26,10 @@ defmodule AppWeb.BoardLive.Show do
         phx-update="stream"
       >
         <g id="unconnected-connector">
-          <path class="pointer-events-all cursor-pointer fill-none stroke-black stroke-2 hidden" />
+          <path
+            class="pointer-events-all cursor-pointer fill-none stroke-black stroke-[6px] hidden"
+            shape-rendering="geometric-precision"
+          />
         </g>
         <%= for {id, edge} <- @streams.edges do %>
           <g
@@ -36,7 +39,10 @@ defmodule AppWeb.BoardLive.Show do
             id={id}
             phx-hook="CardConnector"
           >
-            <path class="pointer-events-all cursor-pointer fill-none stroke-black stroke-2" />
+            <path
+              class="pointer-events-all cursor-pointer fill-none stroke-black stroke-[6px]"
+              shape-rendering="geometric-precision"
+            />
           </g>
         <% end %>
       </svg>

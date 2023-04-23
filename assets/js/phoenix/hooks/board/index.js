@@ -2,8 +2,7 @@ import { getBoard } from "./board-singleton";
 const BoardHook = {
   mounted() {
     getBoard()
-      .setElement(this.el)
-      .setPushEvent(this.pushEvent.bind(this));
+      .setHookInstance(this);
 
   },
   destroyed() {
