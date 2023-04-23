@@ -20,6 +20,19 @@ export default class Card {
     return { y: element?.offsetTop, x: element?.offsetLeft };
   }
 
+  public setActive = () => {
+    this.element.classList.add('drop-shadow-[5px_5px_0px_rgba(0,0,0,0.25)]');
+    this.element.classList.add('animate-wiggle');
+
+    return this;
+  }
+
+  public setNotActive = () => {
+    this.element.classList.remove('drop-shadow-md');
+
+    return this;
+  }
+
   public addMouseDownHandlerToConnector(handler) {
     this.hookInstance.el
       ?.querySelector('.card-connector')

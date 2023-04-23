@@ -72,9 +72,6 @@ export default class Board {
   };
 
   private handleCardMouseDown = (card, event: MouseEvent): void => {
-    // TODO: (@blakedietz) - move this out into the machine context
-    // event.stopPropagation();
-    console.log('card mouse down');
     this.boardService.send({ type: 'MOUSE_DOWN_ON_CARD', card });
   }
 
@@ -132,6 +129,7 @@ export default class Board {
           }
         },
         selectingMultipleCards: {
+          entry: ['setAllCardsActive'],
           on: {
             MOUSE_OVER_CARD: {
               target: 'selectingMultipleCards',
@@ -154,7 +152,7 @@ export default class Board {
               actions: ['clickCard', 'removeAllSelectedCards']
             },
           },
-          entry: ['addCardToSelectedCards']
+          entry: ['addCardToSelectedCards', 'setAllCardsActive'],
         },
         draggingCard: {
           on: {
@@ -251,6 +249,12 @@ export default class Board {
           },
           showEditor: () => {
             document.querySelector('#card-edit-modal')?.classList.remove('hidden');
+          },
+          setAllCardsActive: (context) => {
+            context.selectedCards.forEach(card => card.setActive())
+          },
+          setAllCardsNotActive: () => {
+            context.selectedCards.forEach(card => card.setNotActive())
           },
           setConnectionDraggedFromCard: assign({
             connectionDraggedFromCard: (context, { card }) => {
