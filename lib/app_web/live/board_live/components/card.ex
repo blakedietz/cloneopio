@@ -5,7 +5,7 @@ defmodule AppWeb.BoardLive.Components.Card do
     ~H"""
     <div
       id={@id}
-      class="card min-h-[30px] min-w-[90px] max-w-[300px] absolute bg-zinc-300 rounded-md select-none flex flex-row p-1 pr-2"
+      class="card"
       style={"left: #{@card.x}px; top: #{@card.y}px;"}
       data-card-id={"#{@card.id}"}
       phx-hook="Card"

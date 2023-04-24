@@ -2,4 +2,30 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-/* This file is for your main application CSS */
+.card {
+  @apply min-h-[30px] min-w-[90px] max-w-[300px] absolute bg-zinc-300 rounded-md select-none flex flex-row p-1 pr-2;
+  pointer-events: all;
+}
+
+.card:hover {
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.25);
+}
+
+.card[data-is-selected="true"] {
+  @apply animate-wiggle;
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.25);
+}
+
+.connector-container {
+  pointer-events: none;
+}
+
+.card-connector {
+  @apply cursor-pointer fill-none stroke-black stroke-[6px];
+  pointer-events: all;
+}
+
+.card-connector:hover {
+  @apply stroke-[10px];
+}
+
