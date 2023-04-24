@@ -18,7 +18,7 @@ defmodule AppWeb.BoardLive.Show do
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
-    <main class="relative">
+    <main class="relative" id="app-container" phx-hook="Board">
       <svg
         id="edges"
         class="absolute top-0 left-0"
@@ -27,7 +27,7 @@ defmodule AppWeb.BoardLive.Show do
       >
         <g id="unconnected-connector">
           <path
-            class="pointer-events-all cursor-pointer fill-none stroke-black stroke-[6px] hidden"
+            class="pointer-events-auto cursor-pointer fill-none stroke-black stroke-[6px] hidden"
             shape-rendering="geometric-precision"
           />
         </g>
@@ -36,20 +36,17 @@ defmodule AppWeb.BoardLive.Show do
             data-edge-id={edge.id}
             data-next-node-id={edge.next_node_id}
             data-previous-node-id={edge.previous_node_id}
+            class="connector-container"
             id={id}
             phx-hook="CardConnector"
           >
-            <path
-              class="pointer-events-all cursor-pointer fill-none stroke-black stroke-[6px]"
-              shape-rendering="geometric-precision"
-            />
+            <path class="card-connector" shape-rendering="geometric-precision" />
           </g>
         <% end %>
       </svg>
       <div
-        class="absolute top-0 left-0"
+        class="absolute top-0 left-0 pointer-events-none"
         id="board"
-        phx-hook="Board"
         phx-update="stream"
         style={"width: #{@width}px; height: #{@height}px;"}
       >
