@@ -21,14 +21,13 @@ export default class Card {
   }
 
   public setActive = () => {
-    this.element.classList.add('drop-shadow-[5px_5px_0px_rgba(0,0,0,0.25)]');
-    this.element.classList.add('animate-wiggle');
+    this.element.setAttribute('data-is-selected', true);
 
     return this;
   }
 
   public setNotActive = () => {
-    this.element.classList.remove('drop-shadow-md');
+    this.element.setAttribute('data-is-selected', false);
 
     return this;
   }
