@@ -114,9 +114,6 @@ export default class Board {
         },
         mouseDownOnBoard: {
           on: {
-            MOUSE_MOVE: {
-
-            },
             MOUSE_OVER_CARD: {
               target: 'selectingMultipleCards',
               actions: ['addCardToSelectedCards']
@@ -152,6 +149,7 @@ export default class Board {
               actions: ['clickCard', 'removeAllSelectedCards']
             },
           },
+          exit: ['setAllCardsNotActive'],
           entry: ['addCardToSelectedCards', 'setAllCardsActive'],
         },
         draggingCard: {
