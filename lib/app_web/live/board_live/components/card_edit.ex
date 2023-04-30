@@ -49,7 +49,14 @@ defmodule AppWeb.BoardLive.Components.CardEdit do
       end)
 
     ~H"""
-    <div class={@class} data-card-id={@card_id} id={@id} phx-hook="CardEdit" style={@style}>
+    <div
+      class={@class}
+      data-card-id={@card_id}
+      id={@id}
+      phx-hook="CardEdit"
+      data-is-visible={"#{@is_visible}"}
+      style={@style}
+    >
       <div :if={@is_visible}>
         <.form
           for={@form}
